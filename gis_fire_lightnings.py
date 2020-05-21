@@ -108,7 +108,6 @@ class GisFIRELightnings:
         # Search if the menu exists (there are other GisFIRE modules installed)
         for action in parent_menu.actions():
             if action.text() == menu_name:
-                print("Found GisFire Menu")
                 self._menu_gisfire = action.menu()
         # Create the menu if does not exists and add it to the current menubar
         if self._menu_gisfire is None:
