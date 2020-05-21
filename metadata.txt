@@ -27,7 +27,7 @@ tags=python
 
 homepage=https://github.com/JaumeFigueras/GisFIRE-Lightnings
 category=Plugins
-icon=icon.png
+icon=icons/gis-fire-lightning-64px.png
 # experimental flag
 experimental=False
 
@@ -44,4 +44,3 @@ Category of the plugin: Raster, Vector, Database or Web
 
 # If the plugin can run on QGIS Server.
 server=False
-

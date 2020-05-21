@@ -89,12 +89,29 @@ class GisFIRELightnings:
         return QCoreApplication.translate('GisFIRELightnings', message)
 
     def _addToolbarActions(self):
-        """Create the toolbar buttons that GisFIRE uses as shortcuts."""
-        pass
+        """Create the toolbar buttons that GisFIRE Lightnings uses as
+        shortcuts."""
+        # Setup parameters
+        action = QAction(QIcon(':/plugins/gis_fire_lightnings/setup.png'), self.tr('Setup GisFIRE Lightnings'), None)
+        action.triggered.connect(self.onSetup)
+        action.setEnabled(True)
+        action.setCheckable(False)
+        action.setStatusTip(self.tr('Setup GisFIRE Lightnings'))
+        action.setWhatsThis(self.tr('Setup GisFIRE Lightnings'))
+        self._toolbar.addAction(action)
+        self._toolbarActions['setup'] = action
+        # Separator
+        self._toolbar.addSeparator()
 
     def _addMenuActions(self):
         """Create the menu entries that allow GisFIRE procedures."""
-        pass
+        # Setup parameters
+        action = self._menu.addAction(self.tr('Setup'))
+        action.setIcon(QIcon(':/plugins/gis_fire_lightnings/setup.png'))
+        action.setIconVisibleInMenu(True)
+        action.triggered.connect(self.onSetup)
+        self._menuActions['setup'] = action
+
 
     def _addRelations(self):
         """Create mutually exclusive relations between toolbar buttons."""
@@ -166,3 +183,6 @@ class GisFIRELightnings:
                 self._menu_gisfire.deleteLater()
 
     #--------------------------------------------------------------------------
+
+    def onSetup(self):
+        pass

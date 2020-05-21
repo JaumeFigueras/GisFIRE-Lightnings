@@ -1,5 +1,6 @@
 <RCC>
-    <qresource prefix="/plugins/gis_fire_lightnings" >
-        <file>icon.png</file>
+    <qresource prefix="/plugins/GisFIRE-Lightnings" >
+      <file alias="lightnings.png">/icons/gis-fire-lightning-64px.png</file>
+      <file alias="setup.png">/icons/gis-fire-lightning-setup-64px.png</file>
     </qresource>
 </RCC>
