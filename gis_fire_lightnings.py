@@ -34,8 +34,6 @@ from .resources import *
 from .gis_fire_lightnings_dockwidget import GisFIRELightningsDockWidget
 import os.path
 
-import time
-
 class GisFIRELightnings:
     """QGIS Plugin Implementation."""
 
