@@ -102,6 +102,16 @@ class GisFIRELightnings:
         self._toolbarActions['setup'] = action
         # Separator
         self._toolbar.addSeparator()
+        # Meteo.cat Download lightnings
+        action = QAction(QIcon(':/plugins/gis_fire_lightnings/meteocat-lightnings.png'), self.tr('Download meteo.cat Lightnings'), None)
+        action.triggered.connect(self.onDownloadMeteoCatLightnings)
+        action.setEnabled(True)
+        action.setCheckable(False)
+        action.setStatusTip(self.tr('Download meteo.cat Lightnings'))
+        action.setWhatsThis(self.tr('Download meteo.cat Lightnings'))
+        self._toolbar.addAction(action)
+        self._toolbarActions['download-meteocat-lightnings'] = action
+
 
     def _addMenuActions(self):
         """Create the menu entries that allow GisFIRE procedures."""
@@ -111,6 +121,12 @@ class GisFIRELightnings:
         action.setIconVisibleInMenu(True)
         action.triggered.connect(self.onSetup)
         self._menuActions['setup'] = action
+        # Meteo.cat Download lightnings
+        action = self._menu.addAction(self.tr('Download meteo.cat Lightnings'))
+        action.setIcon(QIcon(':/plugins/gis_fire_lightnings/meteocat-lightnings.png'))
+        action.setIconVisibleInMenu(True)
+        action.triggered.connect(self.onDownloadMeteoCatLightnings)
+        self._menuActions['download-meteocat-lightnings'] = action
 
 
     def _addRelations(self):
@@ -185,4 +201,7 @@ class GisFIRELightnings:
     #--------------------------------------------------------------------------
 
     def onSetup(self):
+        pass
+
+    def onDownloadMeteoCatLightnings(self):
         pass
