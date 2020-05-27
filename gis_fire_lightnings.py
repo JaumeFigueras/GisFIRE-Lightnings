@@ -26,6 +26,7 @@ from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 from PyQt5.QtWidgets import QMenu
 from qgis.utils import active_plugins
+from qgis.core import QgsSettings
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -33,6 +34,10 @@ from .resources import *
 # Import the code for the DockWidget
 from .gis_fire_lightnings_dockwidget import GisFIRELightningsDockWidget
 import os.path
+
+# Import UI dialogs
+from qgis.PyQt.QtWidgets import QDialog
+from .ui.settings import DlgSettings
 
 class GisFIRELightnings:
     """QGIS Plugin Implementation."""
@@ -201,7 +206,15 @@ class GisFIRELightnings:
     #--------------------------------------------------------------------------
 
     def onSetup(self):
-        pass
+        dlg = DlgSettings(self.iface.mainWindow())
+        qgs_settings = QgsSettings()
+        # Get values and initialize dialog
+        meteocat_api_key = qgs_settings.value("gis_fire_lightnings/meteocat_api_key", "")
+        dlg.meteocat_api_key = meteocat_api_key
+        result = dlg.exec_()
+        if result == QDialog.Accepted:
+            # Process meteocat parameters
+            qgs_settings.setValue("gis_fire_lightnings/meteocat_api_key", dlg.meteocat_api_key)
 
     def onDownloadMeteoCatLightnings(self):
         pass
