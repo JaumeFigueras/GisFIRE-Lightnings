@@ -18,4 +18,4 @@ class DlgMeteocatDownload(QDialog, FORM_CLASS):
 
     @property
     def meteocat_download_day(self):
-        return self._cal_download_day.selectedDate().toPyDateTime()
+        return self._cal_download_day.selectedDate().toPyDate()
