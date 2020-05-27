@@ -38,6 +38,7 @@ import os.path
 # Import UI dialogs
 from qgis.PyQt.QtWidgets import QDialog
 from .ui.settings import DlgSettings
+from .ui.meteocat_download import DlgMeteocatDownload
 
 class GisFIRELightnings:
     """QGIS Plugin Implementation."""
@@ -217,4 +218,14 @@ class GisFIRELightnings:
             qgs_settings.setValue("gis_fire_lightnings/meteocat_api_key", dlg.meteocat_api_key)
 
     def onDownloadMeteoCatLightnings(self):
-        pass
+        dlg = DlgMeteocatDownload(self.iface.mainWindow())
+        qgs_settings = QgsSettings()
+        # Get values and initialize dialog
+        meteocat_api_key = qgs_settings.value("gis_fire_lightnings/meteocat_api_key", "")
+        if meteocat_api_key == "":
+            #TODO: Error Message
+            pass
+        result = dlg.exec_()
+        if result == QDialog.Accepted:
+            # Process meteocat parameters
+            print(dlg.meteocat_download_day)
