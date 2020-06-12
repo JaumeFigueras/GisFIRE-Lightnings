@@ -209,6 +209,8 @@ class GisFIRELightnings:
     #--------------------------------------------------------------------------
 
     def onSetup(self):
+        """Display the settings dialog and retrieves the values
+        """
         dlg = DlgSettings(self.iface.mainWindow())
         qgs_settings = QgsSettings()
         # Get values and initialize dialog
@@ -220,6 +222,9 @@ class GisFIRELightnings:
             qgs_settings.setValue("gis_fire_lightnings/meteocat_api_key", dlg.meteocat_api_key)
 
     def onDownloadMeteoCatLightnings(self):
+        """Display the download data from meteocat and starts the download
+        procedure if necessary
+        """
         dlg = DlgMeteocatDownload(self.iface.mainWindow())
         qgs_settings = QgsSettings()
         # Get values and initialize dialog
