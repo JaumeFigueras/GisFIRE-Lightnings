@@ -25,7 +25,21 @@ from qgis.core import QgsPointXY
 from PyQt5.QtCore import QVariant
 
 def download_thread(date, hour, api_key):
-    """
+    """Download function of the meteo.cat dataof the selected date and hour. It
+    uses tha API KEY provided bu the user to access the meteo.cat resources
+
+    :param date: the date of the data to download
+    :type date: datetime.date
+
+    :param hour: the hour of the data to download
+    :type hour: int
+
+    :param api_key: the API KEY provided by meteo.cat to access its resources
+    :type api_key: string
+
+    :return: the success of the download operation and data received as json
+    object extracted from the server response
+    :type return: (bool, object)
     """
     base_url = "https://api.meteo.cat/xdde/v1"
     query = "/catalunya/{0:04d}/{1:02d}/{2:02d}/{3:02d}".format(date.year, date.month, date.day, hour)
@@ -35,8 +49,23 @@ def download_thread(date, hour, api_key):
     return (r.status_code == 200, r.json())
 
 def CreateLightningsLayer(type, name):
+    """Create a QGis vector layer with the attributes specified by the meteo.cat
+    API definition
+
+    :param type: defines the feature type of the layer, meteo.cat provides
+    information to construct a point layer or a polygon layer
+    :type type: string with two possible values 'Point' or 'Polygon'
+
+    :param name: name of the layer that will be shown in the QGis legend
+    :type name: string
+
+    :return: the function returns the newly created layer or None depending on
+    the correct feature type provided
+    :type return: qgis.core.QgsVectorLayer or None
     """
-    """
+    # Check allowed feature types
+    if type != 'Point' or type != 'Polygon':
+        return None
     # create layer
     vl = QgsVectorLayer(type, name, 'memory')
     pr = vl.dataProvider()
@@ -50,17 +79,29 @@ def CreateLightningsLayer(type, name):
                     QgsField('ellipse_angle',  QVariant.Double),
                     QgsField('numSensors',  QVariant.Int),
                     QgsField('nuvolTerra',  QVariant.Int),
-                    QgsField('idMunicipi',  QVariant.String)]
+                    QgsField('idMunicipi',  QVariant.String),
+                    QgsField('lon',  QVariant.Double),
+                    QgsField('lat',  QVariant.Double)]
     pr.addAttributes(attributes)
     vl.updateFields() # tell the vector layer to fetch changes from the provider
+    # Assign current project CRS
     crs = QgsProject.instance().crs()
     vl.setCrs(crs, True)
-    # update layer's extent when new features have been added
-    # because change of extent in provider is not propagated to the layer
+    # Update layer's extent because change of extent in provider is not
+    # propagated to the layer
     vl.updateExtents()
     return vl
 
 def AddLayerInPosition(layer, position):
+    """Add a data layer in a certain position in the QGis legend. It is one
+    indexed, beein the number 1 the top position of the legend.
+
+    :param layer: data layer to be added in the QGis legend
+    :type type: qgis.core.QgsVectorLayer
+
+    :param name: one-indexed poition to add the layer
+    :type name: int
+    """
     QgsProject.instance().addMapLayer(layer, True)
     root = QgsProject.instance().layerTreeRoot()
     node_layer = root.findLayer(layer.id())
@@ -70,7 +111,17 @@ def AddLayerInPosition(layer, position):
     parent.removeChildNode(node_layer)
 
 def AddLightningPoint(layer, lightning):
+    """Add a lightning location with its information to the point layer provided
+
+    :param layer: data layer where the lightning will be added
+    :type type: qgis.core.QgsVectorLayer
+
+    :param name: data object provided by meteo.cat with lightning information
+    :type name: object
+    """
+    # create the feature
     feat = QgsFeature(layer.fields())
+    # add attributes
     feat.setAttribute('id', str(lightning['id']))
     feat.setAttribute('data', lightning['data'])
     feat.setAttribute('correntPic', float(lightning['correntPic']))
@@ -80,8 +131,14 @@ def AddLightningPoint(layer, lightning):
     feat.setAttribute('ellipse_angle', float(lightning['ellipse']['angle']))
     feat.setAttribute('numSensors', int(lightning['numSensors']))
     feat.setAttribute('nuvolTerra', 1 if lightning['nuvolTerra'] else 0)
+    feat.setAttribute('lon', float(lightning['coordenades']['longitud']))
+    feat.setAttribute('lat', float(lightning['coordenades']['latitud']))
+    # municipality id its not always present, depends if the lightning location
+    # is inside Catalonia land or outside (Aragon, Valencia, France or the sea)
     if 'idMunicipi' in lightning:
         feat.setAttribute('idMunicipi', lightning['idMunicipi'])
+    #TODO: We do not really wnow it data is in EPSG:4326 (WGS84) or
+    # EPSG:4258 (ETRS89)
     wgs = QgsCoordinateReferenceSystem(4326)
     tr = QgsCoordinateTransform(wgs, QgsProject.instance().crs(), QgsProject.instance())
     point = QgsGeometry.fromPointXY(QgsPointXY(float(lightning['coordenades']['longitud']), float(lightning['coordenades']['latitud'])))
@@ -90,7 +147,18 @@ def AddLightningPoint(layer, lightning):
     layer.dataProvider().addFeature(feat)
 
 def AddLightningPolygon(layer, lightning):
+    """Add a lightning error ellipse location with its information to the
+    polygon layer provided
+
+    :param layer: data layer where the lightning error ellipse will be added
+    :type type: qgis.core.QgsVectorLayer
+
+    :param name: data object provided by meteo.cat with lightning information
+    :type name: object
+    """
+    # create the feature
     feat = QgsFeature(layer.fields())
+    # add attributes
     feat.setAttribute('id', str(lightning['id']))
     feat.setAttribute('data', lightning['data'])
     feat.setAttribute('correntPic', float(lightning['correntPic']))
@@ -100,23 +168,38 @@ def AddLightningPolygon(layer, lightning):
     feat.setAttribute('ellipse_angle', float(lightning['ellipse']['angle']))
     feat.setAttribute('numSensors', int(lightning['numSensors']))
     feat.setAttribute('nuvolTerra', 1 if lightning['nuvolTerra'] else 0)
+    feat.setAttribute('lon', float(lightning['coordenades']['longitud']))
+    feat.setAttribute('lat', float(lightning['coordenades']['latitud']))
+    # municipality id its not always present, depends if the lightning location
+    # is inside Catalonia land or outside (Aragon, Valencia, France or the sea)
     if 'idMunicipi' in lightning:
         feat.setAttribute('idMunicipi', lightning['idMunicipi'])
+    #TODO: We do not really wnow it data is in EPSG:4326 (WGS84) or
+    # EPSG:4258 (ETRS89)
     wgs = QgsCoordinateReferenceSystem(4326)
     tr = QgsCoordinateTransform(wgs, QgsProject.instance().crs(), QgsProject.instance())
     point = QgsGeometry.fromPointXY(QgsPointXY(float(lightning['coordenades']['longitud']), float(lightning['coordenades']['latitud'])))
     point.transform(tr)
+    # obtain the point coordinates
     (x, y) = point.asPoint()
+    # get the ellipse axis
     a = float(lightning['ellipse']['eixMajor'])
     b = float(lightning['ellipse']['eixMenor'])
+    # if minor axis is greater than major, it seems that the data provided is
+    # incongruent, so it ts aproximated to a circle
     if b > a:
         b = a
+    # sample the ellipose with 100 points to be smooth
     ds = (2 * numpy.pi) / 100
+    # interpolate the ellipse at origin
     ids = arange(0, 2 * numpy.pi, ds)
     points = [(a * cos(ids), b * sin(ids)) for ids in arange(0, 2 * numpy.pi, ds)]
+    # rotate the ellipse the provided angle geographical north referenced
     alpha = radians(float(lightning['ellipse']['angle']) + 90)
     points = [(p[0] * cos(alpha) - p[1] * sin(alpha), p[0] * sin(alpha) + p[1] * cos(alpha)) for p in points]
+    # apply translation to the lightning point
     points = [(p[0] + x, p[1] + y) for p in points]
+    # add geometry to the feature
     ellipse = [QgsPointXY(p[0], p[1]) for p in points]
     feat.setGeometry(QgsGeometry.fromPolygonXY([ellipse]))
     layer.dataProvider().addFeature(feat)
@@ -139,8 +222,9 @@ def download_lightning_data(iface, tr, day):
     if tr('lighnings') in layer_names or tr('lighning-measurement-error') in layer_names:
         iface.messageBar().pushMessage("", tr("Lightning layers exists, please remove them before downloading new lightnings"), level=Qgis.Critical, duration=5)
         return
-    # Create a message. There is a bug where that blocks the message of the
-    # progress bar
+    # Create a message.
+    #TODO: There is a bug where that not show all the progressbar message that
+    # is solved creating a new standard message just before
     iface.messageBar().pushMessage("", tr("Downloading Meteo.cat Lightning data."), level=Qgis.Info, duration=1)
     # Create the progress bar widget
     progressMessageBar = iface.messageBar().createMessage(tr("Downloading Meteo.cat Lightning data."))
