@@ -139,8 +139,8 @@ def AddLightningPoint(layer, lightning):
         feat.setAttribute('idMunicipi', lightning['idMunicipi'])
     #TODO: We do not really wnow it data is in EPSG:4326 (WGS84) or
     # EPSG:4258 (ETRS89)
-    wgs = QgsCoordinateReferenceSystem(4326)
-    tr = QgsCoordinateTransform(wgs, QgsProject.instance().crs(), QgsProject.instance())
+    etrs_geo = QgsCoordinateReferenceSystem(4258)
+    tr = QgsCoordinateTransform(etrs_geo, QgsProject.instance().crs(), QgsProject.instance())
     point = QgsGeometry.fromPointXY(QgsPointXY(float(lightning['coordenades']['longitud']), float(lightning['coordenades']['latitud'])))
     point.transform(tr)
     feat.setGeometry(point)
@@ -176,8 +176,8 @@ def AddLightningPolygon(layer, lightning):
         feat.setAttribute('idMunicipi', lightning['idMunicipi'])
     #TODO: We do not really wnow it data is in EPSG:4326 (WGS84) or
     # EPSG:4258 (ETRS89)
-    wgs = QgsCoordinateReferenceSystem(4326)
-    tr = QgsCoordinateTransform(wgs, QgsProject.instance().crs(), QgsProject.instance())
+    etrs_geo = QgsCoordinateReferenceSystem(4258)
+    tr = QgsCoordinateTransform(etrs_geo, QgsProject.instance().crs(), QgsProject.instance())
     point = QgsGeometry.fromPointXY(QgsPointXY(float(lightning['coordenades']['longitud']), float(lightning['coordenades']['latitud'])))
     point.transform(tr)
     # obtain the point coordinates
