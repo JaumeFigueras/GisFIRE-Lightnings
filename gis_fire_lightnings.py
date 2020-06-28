@@ -26,6 +26,7 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 from PyQt5.QtWidgets import QMenu
+from PyQt5.QtWidgets import QMessageBox
 from qgis.utils import active_plugins
 from qgis.core import QgsSettings
 
@@ -225,14 +226,22 @@ class GisFIRELightnings:
         """Display the download data from meteocat and starts the download
         procedure if necessary
         """
-        dlg = DlgMeteocatDownload(self.iface.mainWindow())
-        qgs_settings = QgsSettings()
         # Get values and initialize dialog
+        qgs_settings = QgsSettings()
         meteocat_api_key = qgs_settings.value("gis_fire_lightnings/meteocat_api_key", "")
-        if meteocat_api_key == "":
-            #TODO: Error Message
-            pass
+        # Errors
+        if meteocat_api_key == "" or len(meteocat_api_key) < 10:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setText(self.tr("Error"))
+            msg.setInformativeText(self.tr('MeteoCat API Key missing'))
+            msg.setWindowTitle(self.tr("Error"))
+            msg.exec_()
+            return
+        # Show dialog
+        dlg = DlgMeteocatDownload(self.iface.mainWindow())
         result = dlg.exec_()
         if result == QDialog.Accepted:
+            # Download data
             day = dlg.meteocat_download_day
             download_lightning_data(self.iface, self.tr, day)
