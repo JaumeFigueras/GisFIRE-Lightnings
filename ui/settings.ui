@@ -42,7 +42,12 @@
        <property name="currentIndex">
         <number>0</number>
        </property>
-       <widget class="QWidget" name="tab">
+       <widget class="QWidget" name="tab_gifire_api">
+        <attribute name="title">
+         <string>GisFIRE API</string>
+        </attribute>
+       </widget>
+       <widget class="QWidget" name="tab_meteocat">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
           <horstretch>0</horstretch>
