@@ -25,10 +25,13 @@
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtWidgets import QDialog
 from PyQt5.QtWidgets import QMenu
 from PyQt5.QtWidgets import QMessageBox
 from qgis.utils import active_plugins
 from qgis.core import QgsSettings
+from qgis.core import Qgis
+from qgis.gui import QgsMessageBar
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -38,7 +41,6 @@ from .gis_fire_lightnings_dockwidget import GisFIRELightningsDockWidget
 import os.path
 
 # Import UI dialogs
-from qgis.PyQt.QtWidgets import QDialog
 from .ui.settings import DlgSettings
 from .ui.meteocat_download import DlgMeteocatDownload
 from .data_providers.meteocat import download_lightning_data
@@ -231,10 +233,11 @@ class GisFIRELightnings:
         meteocat_api_key = qgs_settings.value("gis_fire_lightnings/meteocat_api_key", "")
         # Errors
         if meteocat_api_key == "" or len(meteocat_api_key) < 10:
+            self.iface.messageBar().pushMessage("", self.tr("MeteoCat API Key missing"), level=Qgis.Critical, duration=5)
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Critical)
             msg.setText(self.tr("Error"))
-            msg.setInformativeText(self.tr('MeteoCat API Key missing'))
+            msg.setInformativeText(self.tr("MeteoCat API Key missing"))
             msg.setWindowTitle(self.tr("Error"))
             msg.exec_()
             return
