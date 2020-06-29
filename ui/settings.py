@@ -12,9 +12,32 @@ class DlgSettings(QDialog, FORM_CLASS):
 
     @property
     def meteocat_api_key(self):
-        """I'm the 'x' property."""
         return self.txtMeteoCatApiKey.text()
 
     @meteocat_api_key.setter
     def meteocat_api_key(self, value):
         self.txtMeteoCatApiKey.setText(value)
+
+    @property
+    def gisfire_api_url(self):
+        return self.txtGisFireApiBaseUrl.text()
+
+    @gisfire_api_url.setter
+    def gisfire_api_url(self, value):
+        self.txtGisFireApiBaseUrl.setText(value)
+
+    @property
+    def gisfire_api_username(self):
+        return self.txtGisFireApiUsername.text()
+
+    @gisfire_api_username.setter
+    def gisfire_api_username(self, value):
+        self.txtGisFireApiUsername.setText(value)
+
+    @property
+    def gisfire_api_token(self):
+        return self.txtGisFireApiToken.text()
+
+    @gisfire_api_token.setter
+    def gisfire_api_token(self, value):
+        self.txtGisFireApiToken.setText(value)
