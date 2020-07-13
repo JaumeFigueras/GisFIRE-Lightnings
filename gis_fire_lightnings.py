@@ -217,12 +217,21 @@ class GisFIRELightnings:
         dlg = DlgSettings(self.iface.mainWindow())
         qgs_settings = QgsSettings()
         # Get values and initialize dialog
-        meteocat_api_key = qgs_settings.value("gis_fire_lightnings/meteocat_api_key", "")
-        dlg.meteocat_api_key = meteocat_api_key
+        dlg.meteocat_api_key = qgs_settings.value("gis_fire_lightnings/meteocat_api_key", "")
+        dlg.gisfire_api_url = qgs_settings.value("gis_fire_lightnings/gisfire_api_url", "")
+        dlg.gisfire_api_username = qgs_settings.value("gis_fire_lightnings/gisfire_api_username", "")
+        dlg.gisfire_api_token = qgs_settings.value("gis_fire_lightnings/gisfire_api_token", "")
         result = dlg.exec_()
         if result == QDialog.Accepted:
-            # Process meteocat parameters
+            # Store correct values
             qgs_settings.setValue("gis_fire_lightnings/meteocat_api_key", dlg.meteocat_api_key)
+            qgs_settings.setValue("gis_fire_lightnings/gisfire_api_url", dlg.gisfire_api_url)
+            qgs_settings.setValue("gis_fire_lightnings/gisfire_api_username", dlg.gisfire_api_username)
+            qgs_settings.setValue("gis_fire_lightnings/gisfire_api_token", dlg.gisfire_api_token)
+            print(dlg.meteocat_api_key)
+            print(dlg.gisfire_api_url)
+            print(dlg.gisfire_api_username)
+            print(dlg.gisfire_api_token)
 
     def onDownloadMeteoCatLightnings(self):
         """Display the download data from meteocat and starts the download
