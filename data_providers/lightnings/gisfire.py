@@ -111,7 +111,7 @@ def download_meteocat_lightning_data_from_gisfire_api(iface, tr, day):
             if not return_value[0]:
                 # Thre has been an error
                 iface.messageBar().clearWidgets()
-                iface.messageBar().pushMessage("", tr("ERROR downloading Meteo.cat Lightning data. Aborting"), level=Qgis.Critical, duration=5)
+                iface.messageBar().pushMessage("", tr("ERROR downloading Meteo.cat Lightning data through GisFIRE API. Aborting"), level=Qgis.Critical, duration=5)
                 return
         progress.setValue((i * 100) // hours)
     iface.messageBar().clearWidgets()
