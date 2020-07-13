@@ -24,6 +24,8 @@ from qgis.core import QgsPointXY
 
 from PyQt5.QtCore import QVariant
 
+from .helper import AddLayerInPosition
+
 def download_thread(date, hour, api_key):
     """Download function of the meteo.cat dataof the selected date and hour. It
     uses tha API KEY provided bu the user to access the meteo.cat resources
@@ -64,7 +66,7 @@ def CreateLightningsLayer(type, name):
     :type return: qgis.core.QgsVectorLayer or None
     """
     # Check allowed feature types
-    if type != 'Point' or type != 'Polygon':
+    if type != 'Point' and type != 'Polygon':
         return None
     # create layer
     vl = QgsVectorLayer(type, name, 'memory')
@@ -91,24 +93,6 @@ def CreateLightningsLayer(type, name):
     # propagated to the layer
     vl.updateExtents()
     return vl
-
-def AddLayerInPosition(layer, position):
-    """Add a data layer in a certain position in the QGis legend. It is one
-    indexed, beein the number 1 the top position of the legend.
-
-    :param layer: data layer to be added in the QGis legend
-    :type type: qgis.core.QgsVectorLayer
-
-    :param name: one-indexed poition to add the layer
-    :type name: int
-    """
-    QgsProject.instance().addMapLayer(layer, True)
-    root = QgsProject.instance().layerTreeRoot()
-    node_layer = root.findLayer(layer.id())
-    node_clone = node_layer.clone()
-    parent = node_layer.parent()
-    parent.insertChildNode(position, node_clone)
-    parent.removeChildNode(node_layer)
 
 def AddLightningPoint(layer, lightning):
     """Add a lightning location with its information to the point layer provided
@@ -260,15 +244,15 @@ def download_lightning_data(iface, tr, day):
                 return
         progress.setValue((i * 100) // hours)
     iface.messageBar().clearWidgets()
-    # All data has been downloaded merging all arrays
-    lightnings = list()
-    for _, lighning_list in results:
-        lightnings.extend(lighning_list)
     # Create layers
     lightnings_layer = CreateLightningsLayer('Point', tr('lightnings'))
     errors_layer = CreateLightningsLayer('Polygon', tr('lighning-measurement-error'))
     AddLayerInPosition(lightnings_layer, 1)
     AddLayerInPosition(errors_layer, 2)
+    # All data has been downloaded merging all arrays
+    lightnings = list()
+    for _, lighning_list in results:
+        lightnings.extend(lighning_list)
     # Populate data
     iface.messageBar().pushMessage("", tr("Populating Lightning data."), level=Qgis.Info, duration=1)
     progressMessageBar = iface.messageBar().createMessage(tr("Populating Lightning data."))

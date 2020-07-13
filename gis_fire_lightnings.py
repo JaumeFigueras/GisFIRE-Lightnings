@@ -43,7 +43,7 @@ import os.path
 # Import UI dialogs
 from .ui.settings import DlgSettings
 from .ui.meteocat_download import DlgMeteocatDownload
-from .data_providers.meteocat import download_lightning_data
+from .data_providers.lightnings.gisfire import download_meteocat_lightning_data_from_gisfire_api
 
 class GisFIRELightnings:
     """QGIS Plugin Implementation."""
@@ -240,6 +240,9 @@ class GisFIRELightnings:
         # Get values and initialize dialog
         qgs_settings = QgsSettings()
         meteocat_api_key = qgs_settings.value("gis_fire_lightnings/meteocat_api_key", "")
+        gisfire_api_url = qgs_settings.value("gis_fire_lightnings/gisfire_api_url", "")
+        gisfire_api_username = qgs_settings.value("gis_fire_lightnings/gisfire_api_username", "")
+        gisfire_api_token = qgs_settings.value("gis_fire_lightnings/gisfire_api_token", "")
         # Errors
         if meteocat_api_key == "" or len(meteocat_api_key) < 10:
             self.iface.messageBar().pushMessage("", self.tr("MeteoCat API Key missing"), level=Qgis.Critical, duration=5)
@@ -250,10 +253,37 @@ class GisFIRELightnings:
             msg.setWindowTitle(self.tr("Error"))
             msg.exec_()
             return
+        if gisfire_api_url == "" or len(gisfire_api_url) < 10:
+            self.iface.messageBar().pushMessage("", self.tr("GisFIRE API URL missing"), level=Qgis.Critical, duration=5)
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setText(self.tr("Error"))
+            msg.setInformativeText(self.tr("GisFIRE API URL missing"))
+            msg.setWindowTitle(self.tr("Error"))
+            msg.exec_()
+            return
+        if gisfire_api_username == "" or len(gisfire_api_username) < 1:
+            self.iface.messageBar().pushMessage("", self.tr("GisFIRE API Username mssing"), level=Qgis.Critical, duration=5)
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setText(self.tr("Error"))
+            msg.setInformativeText(self.tr("GisFIRE API Username mssing"))
+            msg.setWindowTitle(self.tr("Error"))
+            msg.exec_()
+            return
+        if gisfire_api_token == "" or len(gisfire_api_token) < 10:
+            self.iface.messageBar().pushMessage("", self.tr("GisFIRE API token mssing"), level=Qgis.Critical, duration=5)
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setText(self.tr("Error"))
+            msg.setInformativeText(self.tr("GisFIRE API token mssing"))
+            msg.setWindowTitle(self.tr("Error"))
+            msg.exec_()
+            return
         # Show dialog
         dlg = DlgMeteocatDownload(self.iface.mainWindow())
         result = dlg.exec_()
         if result == QDialog.Accepted:
             # Download data
             day = dlg.meteocat_download_day
-            download_lightning_data(self.iface, self.tr, day)
+            download_meteocat_lightning_data_from_gisfire_api(self.iface, self.tr, day)
