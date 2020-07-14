@@ -122,7 +122,15 @@ class GisFIRELightnings:
         action.setWhatsThis(self.tr('Download meteo.cat Lightnings'))
         self._toolbar.addAction(action)
         self._toolbarActions['download-meteocat-lightnings'] = action
-
+        # Clip lightnings
+        action = QAction(QIcon(':/plugins/gis_fire_lightnings/clip-lightnings.png'), self.tr('Clip lightnings on layer and features'), None)
+        action.triggered.connect(self.onClipLightnings)
+        action.setEnabled(True)
+        action.setCheckable(False)
+        action.setStatusTip(self.tr('Clip lightnings on layer and features'))
+        action.setWhatsThis(self.tr('Clip lightnings on layer and features'))
+        self._toolbar.addAction(action)
+        self._toolbarActions['clip-lightnings'] = action
 
     def _addMenuActions(self):
         """Create the menu entries that allow GisFIRE procedures."""
@@ -138,6 +146,12 @@ class GisFIRELightnings:
         action.setIconVisibleInMenu(True)
         action.triggered.connect(self.onDownloadMeteoCatLightnings)
         self._menuActions['download-meteocat-lightnings'] = action
+        # Meteo.cat Download lightnings
+        action = self._menu.addAction(self.tr('Clip lightnings on layer and features'))
+        action.setIcon(QIcon(':/plugins/gis_fire_lightnings/clip-lightnings.png'))
+        action.setIconVisibleInMenu(True)
+        action.triggered.connect(self.onClipLightnings)
+        self._menuActions['clip-lightnings'] = action
 
 
     def _addRelations(self):
@@ -287,3 +301,6 @@ class GisFIRELightnings:
             # Download data
             day = dlg.meteocat_download_day
             download_meteocat_lightning_data_from_gisfire_api(self.iface, self.tr, day)
+
+    def onClipLightnings(self):
+        pass
