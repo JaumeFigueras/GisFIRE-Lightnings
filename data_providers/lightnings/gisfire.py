@@ -143,5 +143,7 @@ def download_meteocat_lightning_data_from_gisfire_api(iface, tr, day):
         AddLightningPolygon(errors_layer, lightning)
         i += 1
         progress.setValue((i * 100) // len(lightnings))
+        QgsApplication.instance().processEvents()
     # Delete the progress bar
     iface.messageBar().clearWidgets()
+    return (lightnings_layer, errors_layer, )

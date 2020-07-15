@@ -26,13 +26,18 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 from qgis.PyQt.QtWidgets import QDialog
+from qgis.PyQt.QtWidgets import QProgressBar
 from PyQt5.QtWidgets import QMenu
 from PyQt5.QtWidgets import QMessageBox
 from qgis.utils import active_plugins
 from qgis.core import QgsSettings
 from qgis.core import Qgis
+from qgis.core import QgsProcessingFeatureSourceDefinition
+from qgis.core import QgsProcessingFeedback
+from qgis.core import QgsApplication
 from qgis.gui import QgsMessageBar
-
+from processing.core.Processing import Processing
+import processing
 # Initialize Qt resources from file resources.py
 from .resources import *
 
@@ -43,7 +48,10 @@ import os.path
 # Import UI dialogs
 from .ui.settings import DlgSettings
 from .ui.meteocat_download import DlgMeteocatDownload
+from .ui.clipping import DlgClipping
 from .data_providers.lightnings.gisfire import download_meteocat_lightning_data_from_gisfire_api
+from .data_providers.lightnings.helper import AddLayerInPosition
+from .data_providers.lightnings.meteocat import SetRenderer
 
 class GisFIRELightnings:
     """QGIS Plugin Implementation."""
@@ -303,4 +311,29 @@ class GisFIRELightnings:
             download_meteocat_lightning_data_from_gisfire_api(self.iface, self.tr, day)
 
     def onClipLightnings(self):
-        pass
+        dlg = DlgClipping(self.iface.mainWindow())
+        result = dlg.exec_()
+        if result == QDialog.Accepted:
+            # Now we can clip
+            lightnings_layer = dlg.lightnings_layer
+            polygons_layer = dlg.polygons_layer
+            if lightnings_layer.selectedFeatureCount() == 0:
+                input = lightnings_layer
+            else:
+                input = QgsProcessingFeatureSourceDefinition(lightnings_layer.id(), True)
+            if polygons_layer.selectedFeatureCount() == 0:
+                overlay = polygons_layer
+            else:
+                overlay = QgsProcessingFeatureSourceDefinition(polygons_layer.id(), True)
+            #
+            params = {'INPUT': input, 'OVERLAY': overlay, 'OUTPUT': 'memory:'}
+            feedback = QgsProcessingFeedback()
+            self.iface.messageBar().pushMessage("", self.tr("Clipping Lightnings."), level=Qgis.Info, duration=0)
+            QgsApplication.instance().processEvents()
+            result = processing.run('native:clip', params, feedback=feedback, is_child_algorithm=False)
+            new_layer = result['OUTPUT']
+            new_layer.setName(lightnings_layer.name() + " - " + polygons_layer.name())
+            SetRenderer(new_layer, self.tr)
+            AddLayerInPosition(new_layer, 1)
+            self.iface.messageBar().clearWidgets()
+            QgsApplication.instance().processEvents()
