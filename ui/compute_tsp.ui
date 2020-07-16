@@ -96,7 +96,11 @@
            </widget>
           </item>
           <item row="2" column="1">
-           <widget class="QSpinBox" name="_eps"/>
+           <widget class="QSpinBox" name="_eps">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
           <item row="0" column="1">
            <widget class="QSpinBox" name="_max_distance"/>

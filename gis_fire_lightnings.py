@@ -53,6 +53,8 @@ from .ui.compute_tsp import DlgProcessLightnings
 from .data_providers.lightnings.gisfire import download_meteocat_lightning_data_from_gisfire_api
 from .data_providers.lightnings.helper import AddLayerInPosition
 from .data_providers.lightnings.meteocat import SetRenderer
+from .algorithms.helper import Layer2Vector
+from .algorithms.helper import ComputeDistanceMatrix
 
 class GisFIRELightnings:
     """QGIS Plugin Implementation."""
@@ -347,6 +349,10 @@ class GisFIRELightnings:
             self.iface.messageBar().pushMessage("", self.tr("Clipping Lightnings."), level=Qgis.Info, duration=0)
             QgsApplication.instance().processEvents()
             result = processing.run('native:clip', params, feedback=feedback, is_child_algorithm=False)
+            tmp_layer = result['OUTPUT']
+            params = {'INPUT': tmp_layer, 'OUTPUT': 'memory:'}
+            feedback = QgsProcessingFeedback()
+            result = processing.run('native:multiparttosingleparts', params, feedback=feedback, is_child_algorithm=False)
             new_layer = result['OUTPUT']
             new_layer.setName(lightnings_layer.name() + " - " + polygons_layer.name())
             SetRenderer(new_layer, self.tr)
@@ -381,3 +387,10 @@ class GisFIRELightnings:
             qgs_settings.setValue("gis_fire_lightnings/helicopter_maximum_distance", str(dlg.helicopter_maximum_distance))
             qgs_settings.setValue("gis_fire_lightnings/enable_lightning_grouping", "true" if dlg.enable_lightning_grouping else "false")
             qgs_settings.setValue("gis_fire_lightnings/grouping_eps", str(dlg.grouping_eps))
+            points_layer = lightnings_layer
+            base = (helicopter_layer.selectedFeatures()[0].geometry().asPoint().x(), helicopter_layer.selectedFeatures()[0].geometry().asPoint().x())
+            if dlg.grouping_eps:
+                pass
+            points = [base] + Layer2Vector(points_layer) + [base]
+            distance_matrix = ComputeDistanceMatrix(points)
+            print(distance_matrix)
