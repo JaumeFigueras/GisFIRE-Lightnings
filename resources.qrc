@@ -4,5 +4,6 @@
       <file alias="setup.png">/icons/gis-fire-lightning-setup-64px.png</file>
       <file alias="meteocat-lightnings.png">/icons/meteocat-lighning-download-64px.png</file>
       <file alias="clip-lightnings.png">/icons/clip-lightning-64px.png</file>
+      <file alias="process-lightnings.png">/icons/process-lightnings-64px.png</file>
     </qresource>
 </RCC>

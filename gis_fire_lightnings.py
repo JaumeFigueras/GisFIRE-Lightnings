@@ -49,6 +49,7 @@ import os.path
 from .ui.settings import DlgSettings
 from .ui.meteocat_download import DlgMeteocatDownload
 from .ui.clipping import DlgClipping
+from .ui.compute_tsp import DlgProcessLightnings
 from .data_providers.lightnings.gisfire import download_meteocat_lightning_data_from_gisfire_api
 from .data_providers.lightnings.helper import AddLayerInPosition
 from .data_providers.lightnings.meteocat import SetRenderer
@@ -139,6 +140,15 @@ class GisFIRELightnings:
         action.setWhatsThis(self.tr('Clip lightnings on layer and features'))
         self._toolbar.addAction(action)
         self._toolbarActions['clip-lightnings'] = action
+        # Process lightnings
+        action = QAction(QIcon(':/plugins/gis_fire_lightnings/process-lightnings.png'), self.tr('Calculate lightnings route'), None)
+        action.triggered.connect(self.onProcessLightnings)
+        action.setEnabled(True)
+        action.setCheckable(False)
+        action.setStatusTip(self.tr('Calculate lightnings route'))
+        action.setWhatsThis(self.tr('Calculate lightnings route'))
+        self._toolbar.addAction(action)
+        self._toolbarActions['process-lightnings'] = action
 
     def _addMenuActions(self):
         """Create the menu entries that allow GisFIRE procedures."""
@@ -154,12 +164,18 @@ class GisFIRELightnings:
         action.setIconVisibleInMenu(True)
         action.triggered.connect(self.onDownloadMeteoCatLightnings)
         self._menuActions['download-meteocat-lightnings'] = action
-        # Meteo.cat Download lightnings
+        # Clip lightnings
         action = self._menu.addAction(self.tr('Clip lightnings on layer and features'))
         action.setIcon(QIcon(':/plugins/gis_fire_lightnings/clip-lightnings.png'))
         action.setIconVisibleInMenu(True)
         action.triggered.connect(self.onClipLightnings)
         self._menuActions['clip-lightnings'] = action
+        # Clip lightnings
+        action = self._menu.addAction(self.tr('Calculate lightnings route'))
+        action.setIcon(QIcon(':/plugins/gis_fire_lightnings/process-lightnings.png'))
+        action.setIconVisibleInMenu(True)
+        action.triggered.connect(self.onProcessLightnings)
+        self._menuActions['process-lightnings'] = action
 
 
     def _addRelations(self):
@@ -337,3 +353,31 @@ class GisFIRELightnings:
             AddLayerInPosition(new_layer, 1)
             self.iface.messageBar().clearWidgets()
             QgsApplication.instance().processEvents()
+
+    def onProcessLightnings(self):
+        # Show dialog
+        dlg = DlgProcessLightnings(self.iface.mainWindow())
+        # Get values and initialize dialog
+        qgs_settings = QgsSettings()
+        dlg.helicopter_maximum_distance = int(qgs_settings.value("gis_fire_lightnings/helicopter_maximum_distance", "300"))
+        dlg.enable_lightning_grouping = qgs_settings.value("gis_fire_lightnings/enable_lightning_grouping", "true") == "true"
+        dlg.grouping_eps = int(qgs_settings.value("gis_fire_lightnings/grouping_eps", "2000"))
+        # Run dialog
+        result = dlg.exec_()
+        if result == QDialog.Accepted:
+            # Get dialog data
+            lightnings_layer = dlg.lightnings_layer
+            helicopter_layer = dlg.helicopter_layer
+            # Just one base must be selected
+            if helicopter_layer.selectedFeatureCount() != 1:
+                self.iface.messageBar().pushMessage("", self.tr("One helicopter base must be selected"), level=Qgis.Critical, duration=5)
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Critical)
+                msg.setText(self.tr("Error"))
+                msg.setInformativeText(self.tr("One helicopter base must be selected"))
+                msg.setWindowTitle(self.tr("Error"))
+                msg.exec_()
+                return
+            qgs_settings.setValue("gis_fire_lightnings/helicopter_maximum_distance", str(dlg.helicopter_maximum_distance))
+            qgs_settings.setValue("gis_fire_lightnings/enable_lightning_grouping", "true" if dlg.enable_lightning_grouping else "false")
+            qgs_settings.setValue("gis_fire_lightnings/grouping_eps", str(dlg.grouping_eps))
