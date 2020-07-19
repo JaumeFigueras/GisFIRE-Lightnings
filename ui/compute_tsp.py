@@ -22,6 +22,8 @@ class DlgProcessLightnings(QDialog, FORM_CLASS):
         self._max_distance.setMaximum(9999)
         self._eps.setMinimum(0)
         self._eps.setMaximum(9999)
+        self._eps.setDisabled(True)
+        self._enable_grouping.setChecked(False)
         self._enable_grouping.stateChanged.connect(self.onGroupingChanged)
 
     def onGroupingChanged(self):
