@@ -254,7 +254,7 @@ def download_lightning_data(iface, tr, day):
     layer_names = [layer.name() for layer in QgsProject.instance().mapLayers().values()]
     if tr('lighnings') in layer_names or tr('lighning-measurement-error') in layer_names:
         iface.messageBar().pushMessage("", tr("Lightning layers exists, please remove them before downloading new lightnings"), level=Qgis.Critical, duration=5)
-        return
+        return (False, None)
     # Create a message.
     #TODO: There is a bug where that not show all the progressbar message that
     # is solved creating a new standard message just before
@@ -290,7 +290,7 @@ def download_lightning_data(iface, tr, day):
                 # Thre has been an error
                 iface.messageBar().clearWidgets()
                 iface.messageBar().pushMessage("", tr("ERROR downloading Meteo.cat Lightning data. Aborting"), level=Qgis.Critical, duration=5)
-                return
+                return (False, None)
         progress.setValue((i * 100) // hours)
     iface.messageBar().clearWidgets()
     # Create layers
@@ -316,5 +316,7 @@ def download_lightning_data(iface, tr, day):
         AddLightningPolygon(errors_layer, lightning)
         i += 1
         progress.setValue((i * 100) // len(lightnings))
+        QgsApplication.instance().processEvents()
     # Delete the progress bar
     iface.messageBar().clearWidgets()
+    return (True, (lightnings_layer, errors_layer))

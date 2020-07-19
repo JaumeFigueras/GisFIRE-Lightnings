@@ -55,6 +55,7 @@ from .data_providers.lightnings.helper import AddLayerInPosition
 from .data_providers.lightnings.meteocat import SetRenderer
 from .algorithms.helper import Layer2Vector
 from .algorithms.helper import ComputeDistanceMatrix
+from .algorithms.general import NonCrossingPaths
 
 class GisFIRELightnings:
     """QGIS Plugin Implementation."""
@@ -326,7 +327,10 @@ class GisFIRELightnings:
         if result == QDialog.Accepted:
             # Download data
             day = dlg.meteocat_download_day
-            download_meteocat_lightning_data_from_gisfire_api(self.iface, self.tr, day)
+            success, layers = download_meteocat_lightning_data_from_gisfire_api(self.iface, self.tr, day)
+            if success:
+                layers[0].triggerRepaint()
+                self.iface.mapCanvas().refresh()
 
     def onClipLightnings(self):
         dlg = DlgClipping(self.iface.mainWindow())
@@ -358,6 +362,8 @@ class GisFIRELightnings:
             SetRenderer(new_layer, self.tr)
             AddLayerInPosition(new_layer, 1)
             self.iface.messageBar().clearWidgets()
+            new_layer.triggerRepaint()
+            self.iface.mapCanvas().refresh()
             QgsApplication.instance().processEvents()
 
     def onProcessLightnings(self):
@@ -389,8 +395,9 @@ class GisFIRELightnings:
             qgs_settings.setValue("gis_fire_lightnings/grouping_eps", str(dlg.grouping_eps))
             points_layer = lightnings_layer
             base = (helicopter_layer.selectedFeatures()[0].geometry().asPoint().x(), helicopter_layer.selectedFeatures()[0].geometry().asPoint().x())
+            points = [base] + Layer2Vector(points_layer) + [base]
             if dlg.grouping_eps:
                 pass
-            points = [base] + Layer2Vector(points_layer) + [base]
             distance_matrix = ComputeDistanceMatrix(points)
-            print(distance_matrix)
+            path = NonCrossingPaths(distance_matrix, list(range(len(points))))
+            print(path)

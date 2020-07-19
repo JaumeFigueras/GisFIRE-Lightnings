@@ -73,7 +73,7 @@ def download_meteocat_lightning_data_from_gisfire_api(iface, tr, day):
     layer_names = [layer.name() for layer in QgsProject.instance().mapLayers().values()]
     if tr('lighnings') in layer_names or tr('lighning-measurement-error') in layer_names:
         iface.messageBar().pushMessage("", tr("Lightning layers exists, please remove them before downloading new lightnings"), level=Qgis.Critical, duration=5)
-        return
+        return (False, None)
     # Create a message.
     #TODO: There is a bug where that not show all the progressbar message that
     # is solved creating a new standard message just before
@@ -113,7 +113,7 @@ def download_meteocat_lightning_data_from_gisfire_api(iface, tr, day):
                 # Thre has been an error
                 iface.messageBar().clearWidgets()
                 iface.messageBar().pushMessage("", tr("ERROR downloading Meteo.cat Lightning data through GisFIRE API. Aborting"), level=Qgis.Critical, duration=5)
-                return
+                return (False, None)
         progress.setValue((i * 100) // hours)
     iface.messageBar().clearWidgets()
     # All data has been downloaded merging all arrays
@@ -146,4 +146,4 @@ def download_meteocat_lightning_data_from_gisfire_api(iface, tr, day):
         QgsApplication.instance().processEvents()
     # Delete the progress bar
     iface.messageBar().clearWidgets()
-    return (lightnings_layer, errors_layer, )
+    return (True, (lightnings_layer, errors_layer))
