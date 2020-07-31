@@ -21,13 +21,8 @@ from qgis.core import QgsGeometry
 from qgis.core import QgsApplication
 from qgis.core import QgsFeature
 from qgis.core import QgsPointXY
-from qgis.core import QgsRuleBasedRenderer
-from qgis.core import QgsSymbol
-from qgis.core import QgsMarkerSymbol
-from qgis.core import QgsUnitTypes
 
 from PyQt5.QtCore import QVariant
-from PyQt5.QtGui import QColor
 
 from .helper import AddLayerInPosition
 
@@ -55,49 +50,6 @@ def download_thread(date, hour, api_key):
     r = requests.get(url, headers=headers)
     return (r.status_code == 200, r.json())
 
-def SetRenderer(layer, tr):
-    # Create a default rule renderer to build a new one
-    symbol = QgsSymbol.defaultSymbol(layer.geometryType())
-    renderer = QgsRuleBasedRenderer(symbol)
-    root = renderer.rootRule()
-    # Create positive Rule
-    rule_positive = root.children()[0].clone()
-    rule_positive.setLabel(tr('Positive'))
-    rule_positive.setFilterExpression('"correntPic" >= 0 AND "nuvolTerra" = 1')
-    symbol = QgsMarkerSymbol.createSimple({'name': 'cross'})
-    symbol.setSize(4.0)
-    symbol.setSizeUnit(QgsUnitTypes.RenderMillimeters)
-    symbol.setColor(QColor('#ff0000'))
-    symbol.symbolLayer(0).setStrokeWidth(1.0)
-    rule_positive.setSymbol(symbol)
-    root.appendChild(rule_positive)
-    # Create negative Rule
-    rule_negative = root.children()[0].clone()
-    rule_negative.setLabel(tr('Negative'))
-    rule_negative.setFilterExpression('"correntPic" < 0 AND "nuvolTerra" = 1')
-    symbol = QgsMarkerSymbol.createSimple({'name': 'line'})
-    symbol.setAngle(90.0)
-    symbol.setSize(4.0)
-    symbol.setSizeUnit(QgsUnitTypes.RenderMillimeters)
-    symbol.setColor(QColor('#00ff00'))
-    symbol.symbolLayer(0).setStrokeWidth(1.0)
-    rule_negative.setSymbol(symbol)
-    root.appendChild(rule_negative)
-    # Create positive Rule
-    rule_cloudcloud = root.children()[0].clone()
-    rule_cloudcloud.setLabel(tr('Cloud - Cloud'))
-    rule_cloudcloud.setFilterExpression('"nuvolTerra" = 0')
-    symbol = QgsMarkerSymbol.createSimple({'name': 'circle'})
-    symbol.setSize(1.0)
-    symbol.setSizeUnit(QgsUnitTypes.RenderMillimeters)
-    symbol.setColor(QColor('#0000ff'))
-    rule_cloudcloud.setSymbol(symbol)
-    rule_cloudcloud.setActive(False)
-    root.appendChild(rule_cloudcloud)
-    # Remove default
-    root.removeChildAt(0)
-    # set Renderer
-    layer.setRenderer(renderer)
 
 def CreateLightningsLayer(type, name):
     """Create a QGis vector layer with the attributes specified by the meteo.cat
@@ -121,18 +73,18 @@ def CreateLightningsLayer(type, name):
     vl = QgsVectorLayer(type, name, 'memory')
     pr = vl.dataProvider()
     # add fields
-    attributes = [QgsField('id',  QVariant.String),
-                    QgsField('data',  QVariant.String),
-                    QgsField('correntPic',  QVariant.Double),
-                    QgsField('chi2',  QVariant.Double),
-                    QgsField('ellipse_eixMajor',  QVariant.Double),
-                    QgsField('ellipse_eixMenor',  QVariant.Double),
-                    QgsField('ellipse_angle',  QVariant.Double),
-                    QgsField('numSensors',  QVariant.Int),
-                    QgsField('nuvolTerra',  QVariant.Int),
-                    QgsField('idMunicipi',  QVariant.String),
-                    QgsField('lon',  QVariant.Double),
-                    QgsField('lat',  QVariant.Double)]
+    attributes = [QgsField('_id',  QVariant.String),
+                    QgsField('_data',  QVariant.String),
+                    QgsField('_correntPic',  QVariant.Double),
+                    QgsField('_chi2',  QVariant.Double),
+                    QgsField('_ellipse_eixMajor',  QVariant.Double),
+                    QgsField('_ellipse_eixMenor',  QVariant.Double),
+                    QgsField('_ellipse_angle',  QVariant.Double),
+                    QgsField('_numSensors',  QVariant.Int),
+                    QgsField('_nuvolTerra',  QVariant.Int),
+                    QgsField('_idMunicipi',  QVariant.String),
+                    QgsField('_lon',  QVariant.Double),
+                    QgsField('_lat',  QVariant.Double)]
     pr.addAttributes(attributes)
     vl.updateFields() # tell the vector layer to fetch changes from the provider
     # Assign current project CRS
@@ -155,21 +107,21 @@ def AddLightningPoint(layer, lightning):
     # create the feature
     feat = QgsFeature(layer.fields())
     # add attributes
-    feat.setAttribute('id', str(lightning['id']))
-    feat.setAttribute('data', lightning['data'])
-    feat.setAttribute('correntPic', float(lightning['correntPic']))
-    feat.setAttribute('chi2', float(lightning['chi2']))
-    feat.setAttribute('ellipse_eixMajor', float(lightning['ellipse']['eixMajor']))
-    feat.setAttribute('ellipse_eixMenor', float(lightning['ellipse']['eixMenor']))
-    feat.setAttribute('ellipse_angle', float(lightning['ellipse']['angle']))
-    feat.setAttribute('numSensors', int(lightning['numSensors']))
-    feat.setAttribute('nuvolTerra', 1 if lightning['nuvolTerra'] else 0)
-    feat.setAttribute('lon', float(lightning['coordenades']['longitud']))
-    feat.setAttribute('lat', float(lightning['coordenades']['latitud']))
+    feat.setAttribute('_id', str(lightning['id']))
+    feat.setAttribute('_data', lightning['data'])
+    feat.setAttribute('_correntPic', float(lightning['correntPic']))
+    feat.setAttribute('_chi2', float(lightning['chi2']))
+    feat.setAttribute('_ellipse_eixMajor', float(lightning['ellipse']['eixMajor']))
+    feat.setAttribute('_ellipse_eixMenor', float(lightning['ellipse']['eixMenor']))
+    feat.setAttribute('_ellipse_angle', float(lightning['ellipse']['angle']))
+    feat.setAttribute('_numSensors', int(lightning['numSensors']))
+    feat.setAttribute('_nuvolTerra', 1 if lightning['nuvolTerra'] else 0)
+    feat.setAttribute('_lon', float(lightning['coordenades']['longitud']))
+    feat.setAttribute('_lat', float(lightning['coordenades']['latitud']))
     # municipality id its not always present, depends if the lightning location
     # is inside Catalonia land or outside (Aragon, Valencia, France or the sea)
     if 'idMunicipi' in lightning:
-        feat.setAttribute('idMunicipi', lightning['idMunicipi'])
+        feat.setAttribute('_idMunicipi', lightning['idMunicipi'])
     #TODO: We do not really wnow it data is in EPSG:4326 (WGS84) or
     # EPSG:4258 (ETRS89)
     etrs_geo = QgsCoordinateReferenceSystem(4258)
@@ -192,21 +144,21 @@ def AddLightningPolygon(layer, lightning):
     # create the feature
     feat = QgsFeature(layer.fields())
     # add attributes
-    feat.setAttribute('id', str(lightning['id']))
-    feat.setAttribute('data', lightning['data'])
-    feat.setAttribute('correntPic', float(lightning['correntPic']))
-    feat.setAttribute('chi2', float(lightning['chi2']))
-    feat.setAttribute('ellipse_eixMajor', float(lightning['ellipse']['eixMajor']))
-    feat.setAttribute('ellipse_eixMenor', float(lightning['ellipse']['eixMenor']))
-    feat.setAttribute('ellipse_angle', float(lightning['ellipse']['angle']))
-    feat.setAttribute('numSensors', int(lightning['numSensors']))
-    feat.setAttribute('nuvolTerra', 1 if lightning['nuvolTerra'] else 0)
-    feat.setAttribute('lon', float(lightning['coordenades']['longitud']))
-    feat.setAttribute('lat', float(lightning['coordenades']['latitud']))
+    feat.setAttribute('_id', str(lightning['id']))
+    feat.setAttribute('_data', lightning['data'])
+    feat.setAttribute('_correntPic', float(lightning['correntPic']))
+    feat.setAttribute('_chi2', float(lightning['chi2']))
+    feat.setAttribute('_ellipse_eixMajor', float(lightning['ellipse']['eixMajor']))
+    feat.setAttribute('_ellipse_eixMenor', float(lightning['ellipse']['eixMenor']))
+    feat.setAttribute('_ellipse_angle', float(lightning['ellipse']['angle']))
+    feat.setAttribute('_numSensors', int(lightning['numSensors']))
+    feat.setAttribute('_nuvolTerra', 1 if lightning['nuvolTerra'] else 0)
+    feat.setAttribute('_lon', float(lightning['coordenades']['longitud']))
+    feat.setAttribute('_lat', float(lightning['coordenades']['latitud']))
     # municipality id its not always present, depends if the lightning location
     # is inside Catalonia land or outside (Aragon, Valencia, France or the sea)
     if 'idMunicipi' in lightning:
-        feat.setAttribute('idMunicipi', lightning['idMunicipi'])
+        feat.setAttribute('_idMunicipi', lightning['idMunicipi'])
     #TODO: We do not really wnow it data is in EPSG:4326 (WGS84) or
     # EPSG:4258 (ETRS89)
     etrs_geo = QgsCoordinateReferenceSystem(4258)

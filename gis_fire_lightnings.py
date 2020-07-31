@@ -46,16 +46,27 @@ from .gis_fire_lightnings_dockwidget import GisFIRELightningsDockWidget
 import os.path
 
 # Import UI dialogs
-from .ui.settings import DlgSettings
-from .ui.meteocat_download import DlgMeteocatDownload
-from .ui.clipping import DlgClipping
-from .ui.compute_tsp import DlgProcessLightnings
+from .ui.dialogs.settings import DlgSettings
+from .ui.dialogs.meteocat_download import DlgMeteocatDownload
+from .ui.dialogs.clipping import DlgClipping
+from .ui.dialogs.filters import DlgFilterLightnings
+from .ui.dialogs.compute_tsp import DlgProcessLightnings
+from .ui.renderers.renderers import SetLightningsRenderer
+from .ui.renderers.renderers import SetClusterRenderer
 from .data_providers.lightnings.gisfire import download_meteocat_lightning_data_from_gisfire_api
 from .data_providers.lightnings.helper import AddLayerInPosition
-from .data_providers.lightnings.meteocat import SetRenderer
-from .algorithms.helper import Layer2Vector
 from .algorithms.helper import ComputeDistanceMatrix
 from .algorithms.general import NonCrossingPaths
+from .algorithms.general import GreedyClustering
+from .algorithms.general import GetCentroids
+from .algorithms.general import ReArrangeClusters
+from .data_providers.paths.helper import CreatePathLayer
+from .data_providers.paths.helper import CreateClusteredPointsLayer
+from .data_providers.paths.helper import AddClusteredLightningPoint
+from .data_providers.paths.helper import CreateCentroidsPointsLayer
+from .data_providers.paths.helper import AddCentroidPoint
+from .data_providers.paths.helper import AddPathPoint
+from .data_providers.paths.helper import AddPathLine
 
 class GisFIRELightnings:
     """QGIS Plugin Implementation."""
@@ -143,6 +154,15 @@ class GisFIRELightnings:
         action.setWhatsThis(self.tr('Clip lightnings on layer and features'))
         self._toolbar.addAction(action)
         self._toolbarActions['clip-lightnings'] = action
+        # Clip lightnings
+        action = QAction(QIcon(':/plugins/gis_fire_lightnings/filter-lightnings.png'), self.tr('Filter lightnings'), None)
+        action.triggered.connect(self.onFilterLightnings)
+        action.setEnabled(True)
+        action.setCheckable(False)
+        action.setStatusTip(self.tr('Filter lightnings'))
+        action.setWhatsThis(self.tr('Filter lightnings'))
+        self._toolbar.addAction(action)
+        self._toolbarActions['filter-lightnings'] = action
         # Process lightnings
         action = QAction(QIcon(':/plugins/gis_fire_lightnings/process-lightnings.png'), self.tr('Calculate lightnings route'), None)
         action.triggered.connect(self.onProcessLightnings)
@@ -173,7 +193,13 @@ class GisFIRELightnings:
         action.setIconVisibleInMenu(True)
         action.triggered.connect(self.onClipLightnings)
         self._menuActions['clip-lightnings'] = action
-        # Clip lightnings
+        # Filter lightnings
+        action = self._menu.addAction(self.tr('Filter lightnings'))
+        action.setIcon(QIcon(':/plugins/gis_fire_lightnings/filter-lightnings.png'))
+        action.setIconVisibleInMenu(True)
+        action.triggered.connect(self.onFilterLightnings)
+        self._menuActions['clip-lightnings'] = action
+        # Process lightnings
         action = self._menu.addAction(self.tr('Calculate lightnings route'))
         action.setIcon(QIcon(':/plugins/gis_fire_lightnings/process-lightnings.png'))
         action.setIconVisibleInMenu(True)
@@ -329,6 +355,7 @@ class GisFIRELightnings:
             day = dlg.meteocat_download_day
             success, layers = download_meteocat_lightning_data_from_gisfire_api(self.iface, self.tr, day)
             if success:
+                SetLightningsRenderer(layers[0], self.tr)
                 layers[0].triggerRepaint()
                 self.iface.mapCanvas().refresh()
 
@@ -359,17 +386,24 @@ class GisFIRELightnings:
             result = processing.run('native:multiparttosingleparts', params, feedback=feedback, is_child_algorithm=False)
             new_layer = result['OUTPUT']
             new_layer.setName(lightnings_layer.name() + " - " + polygons_layer.name())
-            SetRenderer(new_layer, self.tr)
+            SetLightningsRenderer(new_layer, self.tr)
             AddLayerInPosition(new_layer, 1)
             self.iface.messageBar().clearWidgets()
             new_layer.triggerRepaint()
             self.iface.mapCanvas().refresh()
             QgsApplication.instance().processEvents()
 
+    def onFilterLightnings(self):
+        dlg = DlgFilterLightnings(self.iface.mainWindow())
+        result = dlg.exec_()
+        if result == QDialog.Accepted:
+            pass
+
+
     def onProcessLightnings(self):
         # Show dialog
         dlg = DlgProcessLightnings(self.iface.mainWindow())
-        # Get values and initialize dialog
+        # Get settings values and initialize dialog
         qgs_settings = QgsSettings()
         dlg.helicopter_maximum_distance = int(qgs_settings.value("gis_fire_lightnings/helicopter_maximum_distance", "300"))
         dlg.enable_lightning_grouping = qgs_settings.value("gis_fire_lightnings/enable_lightning_grouping", "true") == "true"
@@ -390,14 +424,71 @@ class GisFIRELightnings:
                 msg.setWindowTitle(self.tr("Error"))
                 msg.exec_()
                 return
+            # Retrieve settings data for future use
             qgs_settings.setValue("gis_fire_lightnings/helicopter_maximum_distance", str(dlg.helicopter_maximum_distance))
             qgs_settings.setValue("gis_fire_lightnings/enable_lightning_grouping", "true" if dlg.enable_lightning_grouping else "false")
             qgs_settings.setValue("gis_fire_lightnings/grouping_eps", str(dlg.grouping_eps))
-            points_layer = lightnings_layer
-            base = (helicopter_layer.selectedFeatures()[0].geometry().asPoint().x(), helicopter_layer.selectedFeatures()[0].geometry().asPoint().x())
-            points = [base] + Layer2Vector(points_layer) + [base]
+            # Get the lightnings data from the layer
+            lightnings = [{'_id': feat.attributes()[0],
+                            '_data': feat.attributes()[1],
+                            '_correntPic': feat.attributes()[2],
+                            '_chi2': feat.attributes()[3],
+                            '_ellipse_eixMajor': feat.attributes()[4],
+                            '_ellipse_eixMenor': feat.attributes()[5],
+                            '_ellipse_angle': feat.attributes()[6],
+                            '_numSensors': feat.attributes()[7],
+                            '_nuvolTerra': feat.attributes()[8],
+                            '_idMunicipi': feat.attributes()[9],
+                            '_lon': feat.attributes()[10],
+                            '_lat': feat.attributes()[11],
+                            'point': (feat.geometry().asPoint().x(), feat.geometry().asPoint().y())
+                            } for feat in lightnings_layer.getFeatures()]
+            # Add a local id to the lightnings
+            for i in range(len(lightnings)):
+                lightnings[i]['id'] = i
+            # If we want to create lightning clusters
             if dlg.grouping_eps:
-                pass
+                clustered_lightnings_layer = CreateClusteredPointsLayer(self.tr('clustered-lightnings'))
+                clustered_lightnings, number_of_clusters = GreedyClustering(lightnings)
+                clusters = GetCentroids(clustered_lightnings)
+                arranged_lightnings = clustered_lightnings
+                for _ in range(3):
+                    arranged_lightnings, changes = ReArrangeClusters(clusters, arranged_lightnings)
+                    if changes == 0:
+                        break
+                    clusters = GetCentroids(arranged_lightnings)
+                for clustered_lightning in arranged_lightnings:
+                    AddClusteredLightningPoint(clustered_lightnings_layer, clustered_lightning)
+                AddLayerInPosition(clustered_lightnings_layer, 1)
+                SetClusterRenderer(clustered_lightnings_layer, 'circle', clusters, self.tr)
+                centroids_layer = CreateCentroidsPointsLayer(self.tr('cluster-centroids'))
+                for cluster in clusters:
+                    print(cluster)
+                    AddCentroidPoint(centroids_layer, cluster)
+                AddLayerInPosition(centroids_layer, 1)
+                SetClusterRenderer(centroids_layer, 'triangle', clusters, self.tr)
+            # Get the selected base data from the layer
+            base = {'id': helicopter_layer.selectedFeatures()[0].attributes()[0],
+                    'point': (helicopter_layer.selectedFeatures()[0].geometry().asPoint().x(), helicopter_layer.selectedFeatures()[0].geometry().asPoint().y())
+                    }
+            centroid_points = [{'id': cluster['id'],
+                                'point': cluster['centroid']
+                                } for cluster in clusters]
+            centroid_points = [base] + centroid_points + [base]
+            points = [(point['point'][0], point['point'][1]) for point in centroid_points]
             distance_matrix = ComputeDistanceMatrix(points)
             path = NonCrossingPaths(distance_matrix, list(range(len(points))))
-            print(path)
+            points_layer = CreatePathLayer('Point', self.tr('visit-points'))
+            path_layer = CreatePathLayer('LineString', self.tr('visit-path'))
+            line = list()
+            for i in range(len(points)):
+                pt = {'id': i, 'x': points[path[i]][0], 'y': points[path[i]][1]}
+                AddPathPoint(points_layer, pt)
+                line.append(pt)
+            AddPathLine(path_layer, line)
+            AddLayerInPosition(points_layer, 1)
+            AddLayerInPosition(path_layer, 1)
+            points_layer.triggerRepaint()
+            path_layer.triggerRepaint()
+            self.iface.mapCanvas().refresh()
+            QgsApplication.instance().processEvents()

@@ -29,7 +29,6 @@ from qgis.core import QgsApplication
 from .meteocat import CreateLightningsLayer
 from .meteocat import AddLightningPoint
 from .meteocat import AddLightningPolygon
-from .meteocat import SetRenderer
 from .helper import AddLayerInPosition
 
 def download_thread_api(date, hour, api_key, url, username, password):
@@ -122,7 +121,6 @@ def download_meteocat_lightning_data_from_gisfire_api(iface, tr, day):
         lightnings.extend(lighning_list)
     # Create layers
     lightnings_layer = CreateLightningsLayer('Point', tr('lightnings'))
-    SetRenderer(lightnings_layer, tr)
     errors_layer = CreateLightningsLayer('Polygon', tr('lighning-measurement-error'))
     AddLayerInPosition(lightnings_layer, 1)
     AddLayerInPosition(errors_layer, 2)
