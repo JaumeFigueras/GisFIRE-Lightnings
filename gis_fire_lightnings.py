@@ -394,11 +394,44 @@ class GisFIRELightnings:
             QgsApplication.instance().processEvents()
 
     def onFilterLightnings(self):
+        # Show dialog
         dlg = DlgFilterLightnings(self.iface.mainWindow())
+        # Get values and initialize dialog
+        qgs_settings = QgsSettings()
+        dlg.positive_filter = qgs_settings.value("gis_fire_lightnings/positive_filter", "true") == "true"
+        dlg.positive_current_filter = qgs_settings.value("gis_fire_lightnings/positive_current_filter", "true") == "true"
+        dlg.positive_min_current_filter = qgs_settings.value("gis_fire_lightnings/positive_min_current_filter", "true") == "true"
+        dlg.positive_max_current_filter = qgs_settings.value("gis_fire_lightnings/positive_max_current_filter", "true") == "true"
+        dlg.negative_filter = qgs_settings.value("gis_fire_lightnings/negative_filter", "true") == "true"
+        dlg.negative_current_filter = qgs_settings.value("gis_fire_lightnings/negative_current_filter", "true") == "true"
+        dlg.negative_min_current_filter = qgs_settings.value("gis_fire_lightnings/negative_min_current_filter", "true") == "true"
+        dlg.negative_max_current_filter = qgs_settings.value("gis_fire_lightnings/negative_max_current_filter", "true") == "true"
+        dlg.cloud_filter = qgs_settings.value("gis_fire_lightnings/cloud_filter", "false") == "true"
+        # Run dialog
         result = dlg.exec_()
         if result == QDialog.Accepted:
-            pass
-
+            # Get dialog data and store them
+            qgs_settings.setValue("gis_fire_lightnings/positive_filter", "true" if dlg.positive_filter else "false")
+            qgs_settings.setValue("gis_fire_lightnings/positive_current_filter", "true" if dlg.positive_current_filter else "false")
+            qgs_settings.setValue("gis_fire_lightnings/positive_min_current_filter", "true" if dlg.positive_min_current_filter else "false")
+            qgs_settings.setValue("gis_fire_lightnings/positive_max_current_filter", "true" if dlg.positive_max_current_filter else "false")
+            qgs_settings.setValue("gis_fire_lightnings/negative_filter", "true" if dlg.negative_filter else "false")
+            qgs_settings.setValue("gis_fire_lightnings/negative_current_filter", "true" if dlg.negative_current_filter else "false")
+            qgs_settings.setValue("gis_fire_lightnings/negative_min_current_filter", "true" if dlg.negative_min_current_filter else "false")
+            qgs_settings.setValue("gis_fire_lightnings/negative_max_current_filter", "true" if dlg.negative_max_current_filter else "false")
+            qgs_settings.setValue("gis_fire_lightnings/cloud_filter", "true" if dlg.cloud_filter else "false")
+            query_positive = "FALSE"
+            if dlg.positive_filter:
+                query_positive = "_nuvolTerra = 1 AND _correntPic > 0"
+            query_negative = "FALSE"
+            if dlg.negative_filter:
+                query_negative = "_nuvolTerra = 1 AND _correntPic < 0"
+            query_cloud = "FALSE"
+            if dlg.cloud_filter:
+                query_cloud = "_nuvolTerra = 0"
+            query = "( " + query_positive +  " )" + " OR " + "( " + query_negative + " )" +  " OR " + "( " +  query_cloud + " )"
+            layer = dlg.lightnings_layer
+            layer.setSubsetString(query)
 
     def onProcessLightnings(self):
         # Show dialog
