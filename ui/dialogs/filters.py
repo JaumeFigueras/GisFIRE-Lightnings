@@ -121,6 +121,8 @@ class DlgFilterLightnings(QDialog, FORM_CLASS):
 
     def onLayerSelected(self):
         layer = self._layer.currentLayer()
+        if layer is None:
+            return
         is_lightning_layer = False
         for field in layer.fields():
             if field.name() == "_correntPic":

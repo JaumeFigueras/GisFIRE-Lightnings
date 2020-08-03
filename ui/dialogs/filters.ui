@@ -153,7 +153,7 @@
             <item>
              <widget class="QCheckBox" name="_enable_negative_max_current_filter">
               <property name="text">
-               <string>Maximum</string>
+               <string>Minimum</string>
               </property>
              </widget>
             </item>
@@ -167,7 +167,7 @@
             <item>
              <widget class="QCheckBox" name="_enable_negative_min_current_filter">
               <property name="text">
-               <string>Minimum</string>
+               <string>Maximum</string>
               </property>
              </widget>
             </item>

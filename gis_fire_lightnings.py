@@ -360,6 +360,10 @@ class GisFIRELightnings:
                 self.iface.mapCanvas().refresh()
 
     def onClipLightnings(self):
+        """Display the clipping dialog to select clipping laers and calls the
+        processing tool accordingly
+        """
+        # Show dialog
         dlg = DlgClipping(self.iface.mainWindow())
         result = dlg.exec_()
         if result == QDialog.Accepted:
@@ -423,9 +427,17 @@ class GisFIRELightnings:
             query_positive = "FALSE"
             if dlg.positive_filter:
                 query_positive = "_nuvolTerra = 1 AND _correntPic > 0"
+                if dlg.positive_current_filter and dlg.positive_min_current_filter:
+                    query_positive += " AND _correntPic >= " + str(dlg.positive_min_current)
+                if dlg.positive_current_filter and dlg.positive_max_current_filter:
+                    query_positive += " AND _correntPic <= " + str(dlg.positive_max_current)
             query_negative = "FALSE"
             if dlg.negative_filter:
                 query_negative = "_nuvolTerra = 1 AND _correntPic < 0"
+                if dlg.negative_current_filter and dlg.negative_min_current_filter:
+                    query_negative += " AND _correntPic >= " + str(dlg.negative_min_current)
+                if dlg.negative_current_filter and dlg.negative_max_current_filter:
+                    query_negative += " AND _correntPic <= " + str(dlg.negative_max_current)
             query_cloud = "FALSE"
             if dlg.cloud_filter:
                 query_cloud = "_nuvolTerra = 0"
