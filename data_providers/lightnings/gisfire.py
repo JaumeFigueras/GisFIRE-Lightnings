@@ -3,28 +3,13 @@ import datetime
 import concurrent.futures
 import requests
 from requests.auth import HTTPBasicAuth
-#import json
-#import numpy
-#from numpy import arange
-#from math import sin, cos, radians
-
 
 from qgis.PyQt.QtWidgets import QProgressBar
 from qgis.PyQt.QtCore import *
 from qgis.core import Qgis
-#from qgis.gui import QgsMessageBar
 from qgis.core import QgsSettings
 from qgis.core import QgsProject
-#from qgis.core import QgsCoordinateReferenceSystem
-#from qgis.core import QgsCoordinateTransform
-#from qgis.core import QgsVectorLayer
-#from qgis.core import QgsField
-#from qgis.core import QgsGeometry
 from qgis.core import QgsApplication
-#from qgis.core import QgsFeature
-#from qgis.core import QgsPointXY
-
-#from PyQt5.QtCore import QVariant
 
 from .meteocat import CreateLightningsLayer
 from .meteocat import AddLightningPoint
@@ -42,6 +27,12 @@ def download_thread_api(date, hour, api_key, url, username, password):
     :type hour: int
 
     :param api_key: the API KEY provided by meteo.cat to access its resources
+    :type api_key: string
+
+    :param username: the GISFIRE API username
+    :type password: string
+
+    :param passord: tthe GISFIRE API passord
     :type api_key: string
 
     :return: the success of the download operation and data received as json
