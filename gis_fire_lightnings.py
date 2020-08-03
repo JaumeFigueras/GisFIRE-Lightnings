@@ -360,7 +360,7 @@ class GisFIRELightnings:
                 self.iface.mapCanvas().refresh()
 
     def onClipLightnings(self):
-        """Display the clipping dialog to select clipping laers and calls the
+        """Display the clipping dialog to select clipping layers and calls the
         processing tool accordingly
         """
         # Show dialog
@@ -370,6 +370,7 @@ class GisFIRELightnings:
             # Now we can clip
             lightnings_layer = dlg.lightnings_layer
             polygons_layer = dlg.polygons_layer
+            # Select te whole layer or the selected features only to clip
             if lightnings_layer.selectedFeatureCount() == 0:
                 input = lightnings_layer
             else:
@@ -378,17 +379,19 @@ class GisFIRELightnings:
                 overlay = polygons_layer
             else:
                 overlay = QgsProcessingFeatureSourceDefinition(polygons_layer.id(), True)
-            #
+            # Create the processing workflow to clip
             params = {'INPUT': input, 'OVERLAY': overlay, 'OUTPUT': 'memory:'}
             feedback = QgsProcessingFeedback()
             self.iface.messageBar().pushMessage("", self.tr("Clipping Lightnings."), level=Qgis.Info, duration=0)
             QgsApplication.instance().processEvents()
             result = processing.run('native:clip', params, feedback=feedback, is_child_algorithm=False)
             tmp_layer = result['OUTPUT']
+            # Results appear as multipart so a single part process is executed
             params = {'INPUT': tmp_layer, 'OUTPUT': 'memory:'}
             feedback = QgsProcessingFeedback()
             result = processing.run('native:multiparttosingleparts', params, feedback=feedback, is_child_algorithm=False)
             new_layer = result['OUTPUT']
+            # Add the new layer to the project
             new_layer.setName(lightnings_layer.name() + " - " + polygons_layer.name())
             SetLightningsRenderer(new_layer, self.tr)
             AddLayerInPosition(new_layer, 1)
@@ -398,9 +401,11 @@ class GisFIRELightnings:
             QgsApplication.instance().processEvents()
 
     def onFilterLightnings(self):
+        """Display the filter dialog to select the relevant features
+        """
         # Show dialog
         dlg = DlgFilterLightnings(self.iface.mainWindow())
-        # Get values and initialize dialog
+        # Get the preferred values and initialize dialog
         qgs_settings = QgsSettings()
         dlg.positive_filter = qgs_settings.value("gis_fire_lightnings/positive_filter", "true") == "true"
         dlg.positive_current_filter = qgs_settings.value("gis_fire_lightnings/positive_current_filter", "true") == "true"
@@ -414,7 +419,7 @@ class GisFIRELightnings:
         # Run dialog
         result = dlg.exec_()
         if result == QDialog.Accepted:
-            # Get dialog data and store them
+            # Get dialog data and store them to the preferences
             qgs_settings.setValue("gis_fire_lightnings/positive_filter", "true" if dlg.positive_filter else "false")
             qgs_settings.setValue("gis_fire_lightnings/positive_current_filter", "true" if dlg.positive_current_filter else "false")
             qgs_settings.setValue("gis_fire_lightnings/positive_min_current_filter", "true" if dlg.positive_min_current_filter else "false")
@@ -424,6 +429,7 @@ class GisFIRELightnings:
             qgs_settings.setValue("gis_fire_lightnings/negative_min_current_filter", "true" if dlg.negative_min_current_filter else "false")
             qgs_settings.setValue("gis_fire_lightnings/negative_max_current_filter", "true" if dlg.negative_max_current_filter else "false")
             qgs_settings.setValue("gis_fire_lightnings/cloud_filter", "true" if dlg.cloud_filter else "false")
+            # Build the positive query depending on the selected filters
             query_positive = "FALSE"
             if dlg.positive_filter:
                 query_positive = "_nuvolTerra = 1 AND _correntPic > 0"
@@ -431,6 +437,7 @@ class GisFIRELightnings:
                     query_positive += " AND _correntPic >= " + str(dlg.positive_min_current)
                 if dlg.positive_current_filter and dlg.positive_max_current_filter:
                     query_positive += " AND _correntPic <= " + str(dlg.positive_max_current)
+            # Build the negative query depending on the selected filters
             query_negative = "FALSE"
             if dlg.negative_filter:
                 query_negative = "_nuvolTerra = 1 AND _correntPic < 0"
@@ -438,14 +445,19 @@ class GisFIRELightnings:
                     query_negative += " AND _correntPic >= " + str(dlg.negative_min_current)
                 if dlg.negative_current_filter and dlg.negative_max_current_filter:
                     query_negative += " AND _correntPic <= " + str(dlg.negative_max_current)
+            # Build the cloud to cloud query if it is selected
             query_cloud = "FALSE"
             if dlg.cloud_filter:
                 query_cloud = "_nuvolTerra = 0"
+            # Build and apply the combined query
             query = "( " + query_positive +  " )" + " OR " + "( " + query_negative + " )" +  " OR " + "( " +  query_cloud + " )"
             layer = dlg.lightnings_layer
             layer.setSubsetString(query)
 
     def onProcessLightnings(self):
+        """Display the Process dialog, get the parameters needed and compute the
+        TSP problem ith the selected layers
+        """
         # Show dialog
         dlg = DlgProcessLightnings(self.iface.mainWindow())
         # Get settings values and initialize dialog
@@ -493,15 +505,18 @@ class GisFIRELightnings:
                 lightnings[i]['id'] = i
             # If we want to create lightning clusters
             if dlg.grouping_eps:
+                # Create the cluster layer and clustersº
                 clustered_lightnings_layer = CreateClusteredPointsLayer(self.tr('clustered-lightnings'))
                 clustered_lightnings, number_of_clusters = GreedyClustering(lightnings)
                 clusters = GetCentroids(clustered_lightnings)
                 arranged_lightnings = clustered_lightnings
+                # Re-arrange clusters depending on centroids
                 for _ in range(3):
                     arranged_lightnings, changes = ReArrangeClusters(clusters, arranged_lightnings)
                     if changes == 0:
                         break
                     clusters = GetCentroids(arranged_lightnings)
+                # Add clusters and centroids into its layers
                 for clustered_lightning in arranged_lightnings:
                     AddClusteredLightningPoint(clustered_lightnings_layer, clustered_lightning)
                 AddLayerInPosition(clustered_lightnings_layer, 1)
@@ -512,19 +527,24 @@ class GisFIRELightnings:
                     AddCentroidPoint(centroids_layer, cluster)
                 AddLayerInPosition(centroids_layer, 1)
                 SetClusterRenderer(centroids_layer, 'triangle', clusters, self.tr)
-            # Get the selected base data from the layer
+            # Get the selected helicopter base data from the layer
             base = {'id': helicopter_layer.selectedFeatures()[0].attributes()[0],
                     'point': (helicopter_layer.selectedFeatures()[0].geometry().asPoint().x(), helicopter_layer.selectedFeatures()[0].geometry().asPoint().y())
                     }
+            # build the centroid list
             centroid_points = [{'id': cluster['id'],
                                 'point': cluster['centroid']
                                 } for cluster in clusters]
             centroid_points = [base] + centroid_points + [base]
+            # Get the point coordinates and calculate the distance matrix
             points = [(point['point'][0], point['point'][1]) for point in centroid_points]
             distance_matrix = ComputeDistanceMatrix(points)
+            # Approximate a TSP searching for a planar path
             path = NonCrossingPaths(distance_matrix, list(range(len(points))))
+            # Create the results layer
             points_layer = CreatePathLayer('Point', self.tr('visit-points'))
             path_layer = CreatePathLayer('LineString', self.tr('visit-path'))
+            # Add data to layers and show them
             line = list()
             for i in range(len(points)):
                 pt = {'id': i, 'x': points[path[i]][0], 'y': points[path[i]][1]}
