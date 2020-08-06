@@ -9,6 +9,5 @@ def ComputeDistanceMatrix(points):
 
     :return: a symetric distance matrix
     :type return: matrix
-
     """
     return dst.cdist(points, points, 'euclidean')
