@@ -89,7 +89,6 @@ def download_meteocat_lightning_data_from_gisfire_api(iface, tr, day):
     gisfire_api_url = qgs_settings.value("gis_fire_lightnings/gisfire_api_url", "")
     gisfire_api_username = qgs_settings.value("gis_fire_lightnings/gisfire_api_username", "")
     gisfire_api_token = qgs_settings.value("gis_fire_lightnings/gisfire_api_token", "")
-
     # Lauch the threads to download
     results = list()
     for i in range(hours):
