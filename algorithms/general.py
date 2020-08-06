@@ -83,23 +83,63 @@ def GreedyClustering(lightnings, EPS=2000.0):
     return (lightnings, cluster_id)
 
 def GetCentroids(lightnings):
+    """Create a list of centroids from a lightning list once they have been
+    clustered. The list contains the centroid information as well ass lightning
+    references
+
+    :param lightnings: a list of lightnings to process
+    :type lightnings: lightnings list. A lightning is an object (dictionary)
+    with the information retrieved from the API and its cluster assignment
+
+    :return: a list with all clusters. A cluster is a dictionary with its id, a
+    list of points (lightnings) and its centroid
+    :type return: list
+    """
+    # Copy the lighnings list
     sorted_lightnings = lightnings[:]
+    # Sort it by clusters
     sorted_lightnings.sort(key=lambda x: x['cluster'])
+    # Group the lighnings by its cluster assignment and create a list of all
+    # the groups
     clusters = [{'id': k, 'points': list(g)} for k, g in groupby(sorted_lightnings, key=lambda x: x['cluster'])]
     for cluster in clusters:
+        # Compute the centroid. Numpy is used because standard python do not
+        # allow to sum matrrix columns by default
         cluster_points = np.array([(pt['point'][0], pt['point'][1]) for pt in cluster['points']])
         length = cluster_points.shape[0]
         cluster['centroid'] = (np.sum(cluster_points[:, 0]) / length, np.sum(cluster_points[:, 1]) / length)
     return clusters
 
 def ReArrangeClusters(clusters, points):
+    """Create a new list (deep copied) of lightnings assiging to a cluster a
+    lightning that is nearer to another cluster centroid that its own centroid
+
+    :param clusters: a list of clusters
+    :type cluster: a list of clusters. A cluster is a dictionary with its id, a
+    list of points (lightnings) and its centroid
+
+    :param points: a list of lightnings to process
+    :type points: lightnings list. A lightning is an object (dictionary)
+    with the information retrieved from the API and its cluster assignment
+
+    :return: a tuple with a list with all lightnings with its new cluster
+    assignment and the number of re-assignments. The clusters are not
+    recalculated, it is necessarty to call the GetCentroids function to get the
+    list of clusters with its new centroid
+    :type return: tuple of (lightnings list, number of changes)
+    """
+    # TODO: Què passa si acabo treient tots els llamps d'un cluster?
+    # Copy the lighnings list
     points = cp.deepcopy(points)
     changes = 0
     for point in points:
+        # Calculate the distance to its centroid
         dist = distance.euclidean(point['point'], clusters[point['cluster']]['centroid'])
         for cluster in clusters:
+            # Calculate the distance to all centroids
             new_dist = distance.euclidean(point['point'], cluster['centroid'])
             if new_dist < dist:
+                # re-assign if it is nearer
                 point['cluster'] = cluster['id']
                 changes += 1
     return (points, changes)
