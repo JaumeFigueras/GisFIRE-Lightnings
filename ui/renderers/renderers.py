@@ -45,7 +45,7 @@ def SetLightningsRenderer(layer, tr):
     symbol.setSizeUnit(QgsUnitTypes.RenderMillimeters)
     symbol.setColor(QColor('#0000ff'))
     rule_cloudcloud.setSymbol(symbol)
-    rule_cloudcloud.setActive(False)
+    rule_cloudcloud.setActive(True)
     root.appendChild(rule_cloudcloud)
     # Remove default
     root.removeChildAt(0)
@@ -53,7 +53,7 @@ def SetLightningsRenderer(layer, tr):
     layer.setRenderer(renderer)
 
 def SetClusterRenderer(layer, symbol_name, clusters, tr):
-    """Set the rendering attributes for the clusters."""    
+    """Set the rendering attributes for the clusters."""
     categories = list()
     color_step = 256.0 / len(clusters)
     for i in range(len(clusters)):
