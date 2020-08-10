@@ -8,6 +8,7 @@ from qgis.core import QgsUnitTypes
 from PyQt5.QtGui import QColor
 
 def SetLightningsRenderer(layer, tr):
+    """Set the rendering attributes for the lightnings."""
     # Create a default rule renderer to build a new one
     symbol = QgsSymbol.defaultSymbol(layer.geometryType())
     renderer = QgsRuleBasedRenderer(symbol)
@@ -52,6 +53,7 @@ def SetLightningsRenderer(layer, tr):
     layer.setRenderer(renderer)
 
 def SetClusterRenderer(layer, symbol_name, clusters, tr):
+    """Set the rendering attributes for the clusters."""    
     categories = list()
     color_step = 256.0 / len(clusters)
     for i in range(len(clusters)):
