@@ -40,8 +40,6 @@ import processing
 # Initialize Qt resources from file resources.py
 from .resources import *
 
-# Import the code for the DockWidget
-from .gis_fire_lightnings_dockwidget import GisFIRELightningsDockWidget
 import os.path
 
 # Import UI dialogs
@@ -356,6 +354,9 @@ class GisFIRELightnings:
             if success:
                 SetLightningsRenderer(layers[0], self.tr)
                 layers[0].triggerRepaint()
+                layers[0].updateExtents()
+                extent = layers[0].extent()
+                self.iface.mapCanvas().setExtent(extent)
                 self.iface.mapCanvas().refresh()
 
     def onClipLightnings(self):
