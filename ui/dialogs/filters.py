@@ -8,15 +8,23 @@ import os.path
 
 FORM_CLASS = get_ui_class(os.path.dirname(__file__), 'filters.ui')
 class DlgFilterLightnings(QDialog, FORM_CLASS):
+    """Dialog to define the different types of lightnings that will be filtered
+    for the routing process
+    """
     def __init__(self, parent=None):
+        """Constructor."""
         QDialog.__init__(self, parent)
         self.setupUi(self)
+        # Create the exclusion list of non conforming layers
         no_point_layers = list()
         for layer in QgsProject.instance().mapLayers().values():
             if layer.geometryType() != QgsWkbTypes.PointGeometry:
                 no_point_layers.append(layer)
+        # Add the list to the widgets to exclude the non conforming layers
         self._layer.setExceptedLayerList(no_point_layers)
+        # Create the event handlers for the UI responses
         self._layer.layerChanged.connect(self.onLayerSelected)
+        # Set default values and parameters to the widgets
         self._enable_positive_filter.setChecked(True)
         self._enable_positive_current_filter.setChecked(True)
         self._enable_positive_min_current_filter.setDisabled(False)
@@ -29,10 +37,12 @@ class DlgFilterLightnings(QDialog, FORM_CLASS):
         self._double_positive_max_current_filter.setDisabled(False)
         self._double_positive_max_current_filter.setMinimum(0)
         self._double_positive_max_current_filter.setMaximum(9999)
+        # Create the event handlers for the UI responses
         self._enable_positive_filter.stateChanged.connect(self.onEnablePositiveFilterChanged)
         self._enable_positive_current_filter.stateChanged.connect(self.onEnablePositiveCurrentFilterChanged)
         self._enable_positive_min_current_filter.stateChanged.connect(self.onEnablePositiveMinCurrentFilterChanged)
         self._enable_positive_max_current_filter.stateChanged.connect(self.onEnablePositiveMaxCurrentFilterChanged)
+        # Set default values and parameters to the widgets
         self._enable_negative_filter.setChecked(True)
         self._enable_negative_current_filter.setChecked(True)
         self._enable_negative_min_current_filter.setDisabled(False)
@@ -45,15 +55,18 @@ class DlgFilterLightnings(QDialog, FORM_CLASS):
         self._double_negative_max_current_filter.setDisabled(False)
         self._double_negative_max_current_filter.setMinimum(-9999)
         self._double_negative_max_current_filter.setMaximum(0)
+        # Create the event handlers for the UI responses
         self._enable_negative_filter.stateChanged.connect(self.onEnableNegativeFilterChanged)
         self._enable_negative_current_filter.stateChanged.connect(self.onEnableNegativeCurrentFilterChanged)
         self._enable_negative_min_current_filter.stateChanged.connect(self.onEnableNegativeMinCurrentFilterChanged)
         self._enable_negative_max_current_filter.stateChanged.connect(self.onEnableNegativeMaxCurrentFilterChanged)
+        # Set default values and parameters to the widgets
         self._enable_cloud_filter.setChecked(True)
+        # Compute the min and max values for a first layer
         self.onLayerSelected()
-        #self.onEnablePositiveFilterChanged()
 
     def onEnablePositiveFilterChanged(self):
+        """Event handler to respond to the user actions."""
         self._enable_positive_current_filter.setDisabled(not self._enable_positive_filter.isChecked())
         if self._enable_positive_filter.isChecked():
             self._enable_positive_min_current_filter.setDisabled(not self._enable_positive_current_filter.isChecked())
@@ -71,6 +84,7 @@ class DlgFilterLightnings(QDialog, FORM_CLASS):
             self._double_positive_max_current_filter.setDisabled(True)
 
     def onEnablePositiveCurrentFilterChanged(self):
+        """Event handler to respond to the user actions."""
         self._enable_positive_min_current_filter.setDisabled(not self._enable_positive_current_filter.isChecked())
         self._enable_positive_max_current_filter.setDisabled(not self._enable_positive_current_filter.isChecked())
         if self._enable_positive_current_filter.isChecked():
@@ -81,12 +95,15 @@ class DlgFilterLightnings(QDialog, FORM_CLASS):
             self._double_positive_max_current_filter.setDisabled(True)
 
     def onEnablePositiveMinCurrentFilterChanged(self):
+        """Event handler to respond to the user actions."""
         self._double_positive_min_current_filter.setDisabled(not self._enable_positive_min_current_filter.isChecked())
 
     def onEnablePositiveMaxCurrentFilterChanged(self):
+        """Event handler to respond to the user actions."""
         self._double_positive_max_current_filter.setDisabled(not self._enable_positive_max_current_filter.isChecked())
 
     def onEnableNegativeFilterChanged(self):
+        """Event handler to respond to the user actions."""
         self._enable_negative_current_filter.setDisabled(not self._enable_negative_filter.isChecked())
         if self._enable_negative_filter.isChecked():
             self._enable_negative_min_current_filter.setDisabled(not self._enable_negative_current_filter.isChecked())
@@ -104,6 +121,7 @@ class DlgFilterLightnings(QDialog, FORM_CLASS):
             self._double_negative_max_current_filter.setDisabled(True)
 
     def onEnableNegativeCurrentFilterChanged(self):
+        """Event handler to respond to the user actions."""
         self._enable_negative_min_current_filter.setDisabled(not self._enable_negative_current_filter.isChecked())
         self._enable_negative_max_current_filter.setDisabled(not self._enable_negative_current_filter.isChecked())
         if self._enable_negative_current_filter.isChecked():
@@ -114,12 +132,15 @@ class DlgFilterLightnings(QDialog, FORM_CLASS):
             self._double_negative_max_current_filter.setDisabled(True)
 
     def onEnableNegativeMinCurrentFilterChanged(self):
+        """Event handler to respond to the user actions."""
         self._double_negative_min_current_filter.setDisabled(not self._enable_negative_min_current_filter.isChecked())
 
     def onEnableNegativeMaxCurrentFilterChanged(self):
+        """Event handler to respond to the user actions."""
         self._double_negative_max_current_filter.setDisabled(not self._enable_negative_max_current_filter.isChecked())
 
     def onLayerSelected(self):
+        """Event handler to respond to the user actions."""
         layer = self._layer.currentLayer()
         if layer is None:
             return

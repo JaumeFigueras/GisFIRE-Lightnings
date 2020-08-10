@@ -6,7 +6,9 @@ import os.path
 
 FORM_CLASS = get_ui_class(os.path.dirname(__file__), 'settings.ui')
 class DlgSettings(QDialog, FORM_CLASS):
+    """Dialog to define the different system paraeters."""
     def __init__(self, parent=None):
+        """Constructor."""
         QDialog.__init__(self, parent)
         self.setupUi(self)
 

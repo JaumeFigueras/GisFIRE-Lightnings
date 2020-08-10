@@ -8,9 +8,13 @@ from datetime import timedelta
 
 FORM_CLASS = get_ui_class(os.path.dirname(__file__), 'meteocat_download.ui')
 class DlgMeteocatDownload(QDialog, FORM_CLASS):
+    """Dialog to set te download dates for the lightnings."""
+
     def __init__(self, parent=None):
+        """Constructor."""
         QDialog.__init__(self, parent)
         self.setupUi(self)
+        # Set up iniitial value at yesterday
         yesterday = datetime.utcnow() - timedelta(days=1)
         today = datetime.utcnow()
         self._cal_download_day.setSelectedDate(yesterday)
