@@ -553,6 +553,13 @@ class GisFIRELightnings:
             AddPathLine(path_layer, line)
             AddLayerInPosition(points_layer, 1)
             AddLayerInPosition(path_layer, 1)
+            length = 0
+            for feature in path_layer.getFeatures():
+                length = feature.geometry().length()
+            if length > dlg.helicopter_maximum_distance:
+                self.iface.messageBar().pushMessage("", self.tr("Calculated length is greater than selected maximum"), level=Qgis.Critical, duration=10)
+            else:
+                self.iface.messageBar().pushMessage("", self.tr("Process correctly finished"), level=Qgis.Info, duration=10)                
             points_layer.triggerRepaint()
             path_layer.triggerRepaint()
             self.iface.mapCanvas().refresh()
