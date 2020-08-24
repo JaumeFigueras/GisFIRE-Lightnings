@@ -556,10 +556,10 @@ class GisFIRELightnings:
             length = 0
             for feature in path_layer.getFeatures():
                 length = feature.geometry().length()
-            if length > dlg.helicopter_maximum_distance:
-                self.iface.messageBar().pushMessage("", self.tr("Calculated length is greater than selected maximum"), level=Qgis.Critical, duration=10)
+            if (length / 1000) > dlg.helicopter_maximum_distance:
+                self.iface.messageBar().pushMessage("", self.tr("Calculated length of {} km is greater than selected maximum of {} km").format(length//1000, dlg.helicopter_maximum_distance), level=Qgis.Critical, duration=0)
             else:
-                self.iface.messageBar().pushMessage("", self.tr("Process correctly finished"), level=Qgis.Info, duration=10)                
+                self.iface.messageBar().pushMessage("", self.tr("Process correctly finished. Route Length: {} km").format(length//1000), level=Qgis.Info, duration=0)
             points_layer.triggerRepaint()
             path_layer.triggerRepaint()
             self.iface.mapCanvas().refresh()
