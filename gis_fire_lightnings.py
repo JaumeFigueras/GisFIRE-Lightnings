@@ -485,7 +485,11 @@ class GisFIRELightnings:
             qgs_settings.setValue("gis_fire_lightnings/helicopter_maximum_distance", str(dlg.helicopter_maximum_distance))
             qgs_settings.setValue("gis_fire_lightnings/enable_lightning_grouping", "true" if dlg.enable_lightning_grouping else "false")
             qgs_settings.setValue("gis_fire_lightnings/grouping_eps", str(dlg.grouping_eps))
-            # Get the lightnings data from the layer
+            # Get the lightnings or selected lightnings data from the layer
+            if len(lightnings_layer.selectedFeatures()) > 0:
+                lightnings_iterator = lightnings_layer.selectedFeatures()
+            else:
+                lightnings_iterator = lightnings_layer.getFeatures()
             lightnings = [{'_id': feat.attributes()[0],
                             '_data': feat.attributes()[1],
                             '_correntPic': feat.attributes()[2],
@@ -499,15 +503,15 @@ class GisFIRELightnings:
                             '_lon': feat.attributes()[10],
                             '_lat': feat.attributes()[11],
                             'point': (feat.geometry().asPoint().x(), feat.geometry().asPoint().y())
-                            } for feat in lightnings_layer.getFeatures()]
+                            } for feat in lightnings_iterator]
             # Add a local id to the lightnings
             for i in range(len(lightnings)):
                 lightnings[i]['id'] = i
             # If we want to create lightning clusters
-            if dlg.grouping_eps:
+            if dlg.enable_lightning_grouping:
                 # Create the cluster layer and clustersº
                 clustered_lightnings_layer = CreateClusteredPointsLayer(self.tr('clustered-lightnings'))
-                clustered_lightnings, number_of_clusters = GreedyClustering(lightnings)
+                clustered_lightnings, number_of_clusters = GreedyClustering(lightnings, EPS=dlg.grouping_eps)
                 clusters = GetCentroids(clustered_lightnings)
                 arranged_lightnings = clustered_lightnings
                 # Re-arrange clusters depending on centroids
@@ -527,6 +531,8 @@ class GisFIRELightnings:
                     AddCentroidPoint(centroids_layer, cluster)
                 AddLayerInPosition(centroids_layer, 1)
                 SetClusterRenderer(centroids_layer, 'triangle', clusters, self.tr)
+            else:
+                clusters = [{'id': i, 'centroid':lightnings[i]['point']} for i in range(len(lightnings))]
             # Get the selected helicopter base data from the layer
             base = {'id': helicopter_layer.selectedFeatures()[0].attributes()[0],
                     'point': (helicopter_layer.selectedFeatures()[0].geometry().asPoint().x(), helicopter_layer.selectedFeatures()[0].geometry().asPoint().y())
