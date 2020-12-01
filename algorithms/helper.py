@@ -23,7 +23,6 @@
 """
 
 import numpy as np
-from scipy.spatial import distance as dst
 
 def ComputeDistanceMatrix(points):
     """Computes a distance matrix from all the points in a list.
@@ -34,4 +33,14 @@ def ComputeDistanceMatrix(points):
     :return: a symetric distance matrix
     :type return: matrix
     """
-    return dst.cdist(points, points, 'euclidean')
+    pts = list()
+    for pt in points:
+        pts.append(np.asarray(pt))
+    dist_matrix = np.zeros((len(points), len(points)))
+    for i in range(0, len(pts)):
+        dist_matrix[i][i] = 0.0
+        for j in range(i+1, len(pts)):
+            distance = np.linalg.norm(pts[i] - pts[j])
+            dist_matrix[i][j] = distance
+            dist_matrix[j][i] = distance
+    return dist_matrix
