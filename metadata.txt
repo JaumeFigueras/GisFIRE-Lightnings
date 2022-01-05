@@ -1,0 +1,27 @@
+# Mandatory metadata
+
+[general]
+name=GisFIRE Lightnings
+email=jaume.figueras@upc.edu
+author=Jaume Figueras
+qgisMinimumVersion=3.10
+description=GisFIRE module to manage lightning information, clustering and routing for wildfire surveillance
+about=GisFIRE is a plugin for QGIS that implements several tools used by fire agencies. The Lightnings module
+    implements Lightning information retrieval from different sources and provides clustering and routing for aerial
+    inspection of possible wildfire ignitions.
+version=0.3
+tracker=https://github.com/JaumeFigueras/GisFIRE-Lightnings/issues
+repository=https://github.com/JaumeFigueras/GisFIRE-Lightnings
+
+# Optional metadata
+category=Vector
+changelog=Project start
+tags=wildfire,lightning
+homepage=https://github.com/JaumeFigueras/GisFIRE-Lightnings
+icon=icons/gis-fire-lightning-64px.png
+experimental=True
+deprecated=False
+qgisMaximumVersion=3.99
+plugin_dependencies=
+server=False
+hasProcessingProvider=no
