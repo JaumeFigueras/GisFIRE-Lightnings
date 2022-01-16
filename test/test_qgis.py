@@ -199,7 +199,7 @@ def test_settings_dialog_is_cancelled_02(qgis_app):
 @pytest.mark.parametrize('qgis_app', [{'plugin_names': 'gisfire_lightnings'}], indirect=True)
 def test_settings_dialog_is_ok_01(qgis_app):
     """
-    TODO
+    Test the OK button from blank form
 
     :param qgis_app: QGIS application fixture
     :type qgis_app: (QgsApplication, QgisInterface, QgsSettings, list of GisFIRELightnings)
@@ -230,6 +230,12 @@ def test_settings_dialog_is_ok_01(qgis_app):
 @pytest.mark.parametrize('qgis_app', [{'plugin_names': 'gisfire_lightnings', 'locale': 'EN'},
                                       {'plugin_names': 'gisfire_lightnings', 'locale': 'CA'}], indirect=True)
 def test_settings_dialog_is_ok_02(qgis_app):
+    """
+    Test the OK button from previous settings form
+
+    :param qgis_app: QGIS application fixture
+    :type qgis_app: (QgsApplication, QgisInterface, QgsSettings, list of GisFIRELightnings)
+    """
     qgs, _, settings, plugins = qgis_app
 
     def on_timer():

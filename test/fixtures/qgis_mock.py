@@ -20,10 +20,14 @@ from pytest import FixtureRequest
 @pytest.fixture(scope='function')
 def qgis_app(request):
     """
-    TODO
+    Creates a QGIS application, a QGIS Interface, a QGIS Settings and a set of loaded plugins. The fixture can be
+    parametrized with the following options:
+    - plugin_names: Plugin names to load
+    - plugin_paths: Directories where the plugins are located
+    - locale: Language code with the translation that the plugin has to be loaded
 
-    :param request:
-    :type request: pytest.FixtureRequest
+    :param request: Fixture request. It contains the indirect parameters for fixture setup
+    :type request: FixtureRequest
     :return: The QGIS application objects
     :rtype: (QgsApplication, QgisInterface, QgsSettings, (list of object) or None)
     """
