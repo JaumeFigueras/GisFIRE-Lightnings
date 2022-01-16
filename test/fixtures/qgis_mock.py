@@ -13,12 +13,15 @@ from qgis.PyQt.QtWidgets import QMenuBar
 from PyQt5.QtCore import QSize
 from qgis.core import QgsSettings
 
+
 @pytest.fixture(scope='function')
 def qgis_app(request):
     """
-    TODO:
-    """
+    TODO
 
+    :param request:
+    :type request:
+    """
     # Collect parameters
     plugin_names = request.param['plugin_names'] if 'plugin_names' in request.param else None
     plugin_paths = request.param['plugin_paths'] if 'plugin_paths' in request.param \
