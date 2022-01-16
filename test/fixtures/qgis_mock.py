@@ -12,15 +12,20 @@ from qgis.PyQt.QtWidgets import QMainWindow
 from qgis.PyQt.QtWidgets import QMenuBar
 from PyQt5.QtCore import QSize
 from qgis.core import QgsSettings
+from pytest import FixtureRequest
 
 
+# noinspection PyUnresolvedReferences
+# The pytest request param is optional and generates a warning
 @pytest.fixture(scope='function')
 def qgis_app(request):
     """
     TODO
 
     :param request:
-    :type request:
+    :type request: pytest.FixtureRequest
+    :return: The QGIS application objects
+    :rtype: (QgsApplication, QgisInterface, QgsSettings, (list of object) or None)
     """
     # Collect parameters
     plugin_names = request.param['plugin_names'] if 'plugin_names' in request.param else None
@@ -28,7 +33,8 @@ def qgis_app(request):
         else [str(Path(__file__).parent.parent.parent) + '/src']
     locale = request.param['locale'] if 'locale' in request.param else 'EN'
     # Create a QGIS Application
-    QgsApplication.setPrefixPath("/usr", True)
+    # noinspection PyTypeChecker
+    QgsApplication.setPrefixPath('/usr', True)
     qgs = QgsApplication([], True)
     qgs.initQgis()
     # Mock the QGIS Interface
@@ -68,7 +74,7 @@ def qgis_app(request):
                 qgis.utils.plugin_paths.remove(plugin_path)
         qgis.utils.updateAvailablePlugins()
     else:
-        yield qgs, iface, qgs_settings
+        yield qgs, iface, qgs_settings, None
 
     os.remove(qgs_settings_file)
     del qgs

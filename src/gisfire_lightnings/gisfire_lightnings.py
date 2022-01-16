@@ -11,11 +11,10 @@ from qgis.PyQt.QtWidgets import QDialog
 from PyQt5.QtWidgets import QMenu
 
 
-from qgis.utils import active_plugins
+import qgis.utils
 from qgis.core import QgsSettings
 
 from .ui.dialogs.settings import DlgSettings
-from .resources import *
 
 
 class GisFIRELightnings:
@@ -56,7 +55,6 @@ class GisFIRELightnings:
         self._menu = None
         self._menu_gisfire = None
         self._toolbar = None
-        self._dock_widget = None
         self._dlg = None
         # Initialization of GisFIRE data layers
         self._layers = {}
@@ -201,8 +199,8 @@ class GisFIRELightnings:
                 self._menu_gisfire = action.menu()
         # Create the menu if it does not exist and add it to the current menubar
         if self._menu_gisfire is None:
-            self._menu_gisfire = QMenu(menu_name, self.iface.mainWindow().menuBar())
-            actions = self.iface.mainWindow().menuBar().actions()
+            self._menu_gisfire = QMenu(menu_name, parent_menu)
+            actions = parent_menu.actions()
             if len(actions) > 0:
                 self.iface.mainWindow().menuBar().insertMenu(actions[-1], self._menu_gisfire)
             else:
@@ -213,8 +211,6 @@ class GisFIRELightnings:
         # Set up the toolbar for lightnings plugin
         self._toolbar = self.iface.addToolBar(u'GisFIRE Lightnings')
         self._toolbar.setObjectName(u'GisFIRE Lightnings')
-        # Set up the GisFire pane
-        self._dock_widget = None
 
         # Add toolbar buttons
         self.__add_toolbar_actions()
@@ -243,14 +239,10 @@ class GisFIRELightnings:
         # Remove menu
         if not(self._menu is None):
             self._menu.deleteLater()
-        # Remove dock_widget
-        if self._dock_widget is not None:
-            self._dock_widget.hide()
-            self._dock_widget.deleteLater()
         # Remove the menu_gisfire only if I'm the only GisFIRE module installed
         count = 0
-        for name in active_plugins:
-            if name.startswith('GisFIRE-'):
+        for name in qgis.utils.active_plugins:
+            if name.startswith('gisfire'):
                 count += 1
         if count == 1:
             if not(self._menu_gisfire is None):
