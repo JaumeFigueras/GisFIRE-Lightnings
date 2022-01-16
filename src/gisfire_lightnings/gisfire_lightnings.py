@@ -7,14 +7,22 @@ from qgis.PyQt.QtCore import QTranslator
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtWidgets import QDialog
 from PyQt5.QtWidgets import QMenu
 
+
 from qgis.utils import active_plugins
+from qgis.core import QgsSettings
+
+from .ui.dialogs.settings import DlgSettings
+from .resources import *
 
 
 class GisFIRELightnings:
     """
     GisFIRE Lightnings QGIS plugin implementation
+
+    TODO: Add attributes information
     """
     def __init__(self, iface):
         """
@@ -35,7 +43,7 @@ class GisFIRELightnings:
         locale_path = os.path.join(
             self.plugin_dir,
             'i18n',
-            'GisFIRELightnings_{}.qm'.format(locale))
+            '{}.qm'.format(locale))
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
@@ -49,6 +57,7 @@ class GisFIRELightnings:
         self._menu_gisfire = None
         self._toolbar = None
         self._dock_widget = None
+        self._dlg = None
         # Initialization of GisFIRE data layers
         self._layers = {}
 
@@ -58,9 +67,9 @@ class GisFIRELightnings:
         Get the translation for a string using Qt translation API.
 
         :param message: String for translation.
-        :type message: str, QString
+        :type message: str
         :returns: Translated version of message.
-        :rtype: QString
+        :rtype: str
         """
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
         return QCoreApplication.translate('GisFIRELightnings', message)
@@ -86,11 +95,11 @@ class GisFIRELightnings:
         self._toolbar.addSeparator()
         # Meteo.cat Download lightnings
         action = QAction(
-            QIcon(':/plugins/gis_fire_lightnings/meteocat-lightnings.png'),
+            QIcon(':/plugins/gisfire_lightnings/meteocat-lightnings.png'),
             self.tr('Download meteo.cat Lightnings'),
             None
         )
-        action.triggered.connect(self.onDownloadMeteoCatLightnings)
+        """action.triggered.connect(self.onDownloadMeteoCatLightnings)
         action.setEnabled(True)
         action.setCheckable(False)
         action.setStatusTip(self.tr('Download meteo.cat Lightnings'))
@@ -99,7 +108,7 @@ class GisFIRELightnings:
         self._toolbar_actions['download-meteocat-lightnings'] = action
         # Clip lightnings
         action = QAction(
-            QIcon(':/plugins/gis_fire_lightnings/clip-lightnings.png'),
+            QIcon(':/plugins/gisfire_lightnings/clip-lightnings.png'),
             self.tr('Clip lightnings on layer and features'),
             None
         )
@@ -112,7 +121,7 @@ class GisFIRELightnings:
         self._toolbar_actions['clip-lightnings'] = action
         # Clip lightnings
         action = QAction(
-            QIcon(':/plugins/gis_fire_lightnings/filter-lightnings.png'),
+            QIcon(':/plugins/gisfire_lightnings/filter-lightnings.png'),
             self.tr('Filter lightnings'),
             None
         )
@@ -125,7 +134,7 @@ class GisFIRELightnings:
         self._toolbar_actions['filter-lightnings'] = action
         # Process lightnings
         action = QAction(
-            QIcon(':/plugins/gis_fire_lightnings/process-lightnings.png'),
+            QIcon(':/plugins/gisfire_lightnings/process-lightnings.png'),
             self.tr('Calculate lightnings route'),
             None
         )
@@ -135,7 +144,7 @@ class GisFIRELightnings:
         action.setStatusTip(self.tr('Calculate lightnings route'))
         action.setWhatsThis(self.tr('Calculate lightnings route'))
         self._toolbar.addAction(action)
-        self._toolbar_actions['process-lightnings'] = action
+        self._toolbar_actions['process-lightnings'] = action"""
 
     def __add_menu_actions(self):
         """
@@ -145,32 +154,32 @@ class GisFIRELightnings:
         action = self._menu.addAction(self.tr('Setup'))
         action.setIcon(QIcon(':/plugins/gis_fire_lightnings/setup.png'))
         action.setIconVisibleInMenu(True)
-        action.triggered.connect(self.onSetup)
+        action.triggered.connect(self.__on_setup)
         self._menu_actions['setup'] = action
-        # Meteo.cat Download lightnings
+        """"# Meteo.cat Download lightnings
         action = self._menu.addAction(self.tr('Download meteo.cat Lightnings'))
-        action.setIcon(QIcon(':/plugins/gis_fire_lightnings/meteocat-lightnings.png'))
+        action.setIcon(QIcon(':/plugins/gisfire_lightnings/meteocat-lightnings.png'))
         action.setIconVisibleInMenu(True)
         action.triggered.connect(self.onDownloadMeteoCatLightnings)
         self._menu_actions['download-meteocat-lightnings'] = action
         # Clip lightnings
         action = self._menu.addAction(self.tr('Clip lightnings on layer and features'))
-        action.setIcon(QIcon(':/plugins/gis_fire_lightnings/clip-lightnings.png'))
+        action.setIcon(QIcon(':/plugins/gisfire_lightnings/clip-lightnings.png'))
         action.setIconVisibleInMenu(True)
         action.triggered.connect(self.onClipLightnings)
         self._menu_actions['clip-lightnings'] = action
         # Filter lightnings
         action = self._menu.addAction(self.tr('Filter lightnings'))
-        action.setIcon(QIcon(':/plugins/gis_fire_lightnings/filter-lightnings.png'))
+        action.setIcon(QIcon(':/plugins/gisfire_lightnings/filter-lightnings.png'))
         action.setIconVisibleInMenu(True)
         action.triggered.connect(self.onFilterLightnings)
         self._menu_actions['clip-lightnings'] = action
         # Process lightnings
         action = self._menu.addAction(self.tr('Calculate lightnings route'))
-        action.setIcon(QIcon(':/plugins/gis_fire_lightnings/process-lightnings.png'))
+        action.setIcon(QIcon(':/plugins/gisfire_lightnings/process-lightnings.png'))
         action.setIconVisibleInMenu(True)
         action.triggered.connect(self.onProcessLightnings)
-        self._menu_actions['process-lightnings'] = action
+        self._menu_actions['process-lightnings'] = action"""
 
     def __add_relations(self):
         """
@@ -190,11 +199,14 @@ class GisFIRELightnings:
         for action in parent_menu.actions():
             if action.text() == menu_name:
                 self._menu_gisfire = action.menu()
-        # Create the menu if does not exist and add it to the current menubar
+        # Create the menu if it does not exist and add it to the current menubar
         if self._menu_gisfire is None:
             self._menu_gisfire = QMenu(menu_name, self.iface.mainWindow().menuBar())
             actions = self.iface.mainWindow().menuBar().actions()
-            self.iface.mainWindow().menuBar().insertMenu(actions[-1], self._menu_gisfire)
+            if len(actions) > 0:
+                self.iface.mainWindow().menuBar().insertMenu(actions[-1], self._menu_gisfire)
+            else:
+                self.iface.mainWindow().menuBar().addMenu(self._menu_gisfire)
         # Create Lightnings menu
         self._menu = QMenu(self.tr(u'Lightnings'), self._menu_gisfire)
         self._menu_gisfire.addMenu(self._menu)
@@ -245,4 +257,24 @@ class GisFIRELightnings:
                 self.iface.mainWindow().menuBar().removeAction(self._menu_gisfire.menuAction())
                 self._menu_gisfire.menuAction().deleteLater()
                 self._menu_gisfire.deleteLater()
+
+    def __on_setup(self):
+        self._dlg = DlgSettings(self.iface.mainWindow())
+        qgs_settings = QgsSettings()
+        # Get values and initialize dialog
+        self._dlg.meteocat_api_key = qgs_settings.value("gisfire_lightnings/meteocat_api_key", "")
+        self._dlg.gisfire_api_url = qgs_settings.value("gisfire_lightnings/gisfire_api_url", "")
+        self._dlg.gisfire_api_username = qgs_settings.value("gisfire_lightnings/gisfire_api_username", "")
+        self._dlg.gisfire_api_token = qgs_settings.value("gisfire_lightnings/gisfire_api_token", "")
+        result = self._dlg.exec_()
+        if result == QDialog.Accepted:
+            # Store correct values
+            qgs_settings.setValue("gisfire_lightnings/meteocat_api_key", self._dlg.meteocat_api_key)
+            qgs_settings.setValue("gisfire_lightnings/gisfire_api_url", self._dlg.gisfire_api_url)
+            qgs_settings.setValue("gisfire_lightnings/gisfire_api_username", self._dlg.gisfire_api_username)
+            qgs_settings.setValue("gisfire_lightnings/gisfire_api_token", self._dlg.gisfire_api_token)
+            print(self._dlg.meteocat_api_key)
+            print(self._dlg.gisfire_api_url)
+            print(self._dlg.gisfire_api_username)
+            print(self._dlg.gisfire_api_token)
 

@@ -3,9 +3,8 @@ GisFIRE module to manage lightning information, clustering and routing for wildf
 
 # GisFIRE
 
-GisFIRE is a plugin for QGIS that implements several tools used by fire
-agencies.
-The Lightnings module implements Lightning information retrieval from different
+GisFIRE is a set of plugins for QGIS that implements several tools used by fire
+agencies. The Lightnings module implements Lightning information retrieval from different
 sources and provides clustering and routing for aerial inspection of possible
 wildfire ignitions.
 
@@ -16,21 +15,46 @@ clone the project to continue developing or testing it.
 
 ### Prerequisites
 
-To use GisFIRE you need QGIS and all of its requirements. Also you need python3
-to develop GQIS plugins
+To use GisFIRE you need QGIS and all of its requirements. Visit the QGIS website and follow 
+install instructions.
+[https://qgis.org/en/site/forusers/download.html](https://qgis.org/en/site/forusers/download.html)
 
 ### Installing
 
-Copy or link this project into your QGIS plugin folder
+The plugin is not published in the QGIS repository. The easiest way to install the plugin is to download de the latest 
+distribution zip file and install it with QGIS. In the "Plugins" menu entry of QGIS select the "Manage and Install 
+Plugins..." and in the plugins interface select the "Install from ZIP" option.
 
-In most linux distributions this is:
+## Development
+
+Fork the repo and enjoy
+
+### Compiling the resources
+
+```console
+pyrcc5 resources.qrc -o resources.py
 ```
-Pending
+
+### Translations
+
+First generate the `.ts` file from the `.py` and `.ui` files.
+```console
+pylupdate5 ../GisFIRE-Lightnings/src/gisfire_lightnings/gisfire_lightnings.py -ts ../GisFIRE-Lightnings/src/gisfire_lightnings/i18n/CA.ts
+pylupdate5 ../GisFIRE-Lightnings/src/gisfire_lightnings/ui/dialogs/settings.ui -ts ../GisFIRE-Lightnings/src/gisfire_lightnings/i18n/CA.ts
 ```
 
-## Running the tests
+Then use QLinguist to translate to different languages
 
-No test developed at the moment
+Finally, compile the `.ts` translation files to binary `.qm` files.
+```console
+lrelease ../GisFIRE-Lightnings/src/gisfire_lightnings/i18n/CA.ts
+```
+### Running the tests
+
+Testing was inspired by lots of tutorials and also with lots of problems. This is the best I get running.
+```console
+ python3 -m pytest -x -v --cov-report=html:html_gisfire_lightnings_test_results --cov=../GisFIRE-Lightnings/ ../GisFIRE-Lightnings/test/
+```
 
 ## Contributing
 
@@ -40,8 +64,8 @@ conduct, and the process for submitting pull requests to us.
 ## Authors
 
 * **Jaume Figueras** - *GisFIRE Plugin* - [JaumeFigueras](https://github.com/JaumeFigueras)
-* **Clara XXX** - *Octave analysis* - [Clara XXX](https://github.com/ClaraXXX)
-* **Toni Guasch** - *Data analysis* - [Toni Guasch](https://github.com/ToniGuasch)
+* **Clara Portalés** - *Octave analysis*
+* **Toni Guasch** - *Data analysis*
 
 
 See also the list of [contributors](https://github.com/JaumeFigueras/GisFIRE-Lightnings/contributors)
