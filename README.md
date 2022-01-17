@@ -3,20 +3,18 @@ GisFIRE module to manage lightning information, clustering and routing for wildf
 
 # GisFIRE
 
-GisFIRE is a set of plugins for QGIS that implements several tools used by fire
-agencies. The Lightnings module implements Lightning information retrieval from different
-sources and provides clustering and routing for aerial inspection of possible
-wildfire ignitions.
+GisFIRE is a set of plugins for QGIS that implements several tools used by fire agencies. The Lightnings module 
+implements Lightning information retrieval from different sources and provides clustering and routing for aerial 
+inspection of possible wildfire ignitions.
 
 ## Getting Started
 
-To get familiar with the project follow all the information in the wiki and then
-clone the project to continue developing or testing it.
+To get familiar with the project follow all the information in the wiki and then clone the project to continue 
+developing or testing it.
 
 ### Prerequisites
 
-To use GisFIRE you need QGIS and all of its requirements. Visit the QGIS website and follow 
-install instructions.
+To use GisFIRE you need QGIS and all of its requirements. Visit the QGIS website and follow install instructions.
 [https://qgis.org/en/site/forusers/download.html](https://qgis.org/en/site/forusers/download.html)
 
 ### Installing
