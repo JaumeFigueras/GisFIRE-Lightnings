@@ -16,6 +16,8 @@ from qgis.core import QgsSettings
 
 from .ui.dialogs.settings import DlgSettings
 
+from .resources import *
+
 
 class GisFIRELightnings:
     """
@@ -78,7 +80,7 @@ class GisFIRELightnings:
         """
         # Setup parameters
         action = QAction(
-            QIcon(':/plugins/gis_fire_lightnings/setup.png'),
+            QIcon(':/gisfire_lightnings/setup.png'),
             self.tr('Setup GisFIRE Lightnings'),
             None
         )
@@ -93,7 +95,7 @@ class GisFIRELightnings:
         self._toolbar.addSeparator()
         # Meteo.cat Download lightnings
         action = QAction(
-            QIcon(':/plugins/gisfire_lightnings/meteocat-lightnings.png'),
+            QIcon(':/gisfire_lightnings/meteocat-lightnings.png'),
             self.tr('Download meteo.cat Lightnings'),
             None
         )
@@ -106,7 +108,7 @@ class GisFIRELightnings:
         self._toolbar_actions['download-meteocat-lightnings'] = action
         # Clip lightnings
         action = QAction(
-            QIcon(':/plugins/gisfire_lightnings/clip-lightnings.png'),
+            QIcon(':/gisfire_lightnings/clip-lightnings.png'),
             self.tr('Clip lightnings on layer and features'),
             None
         )
@@ -119,7 +121,7 @@ class GisFIRELightnings:
         self._toolbar_actions['clip-lightnings'] = action
         # Clip lightnings
         action = QAction(
-            QIcon(':/plugins/gisfire_lightnings/filter-lightnings.png'),
+            QIcon(':/gisfire_lightnings/filter-lightnings.png'),
             self.tr('Filter lightnings'),
             None
         )
@@ -132,7 +134,7 @@ class GisFIRELightnings:
         self._toolbar_actions['filter-lightnings'] = action
         # Process lightnings
         action = QAction(
-            QIcon(':/plugins/gisfire_lightnings/process-lightnings.png'),
+            QIcon(':/gisfire_lightnings/process-lightnings.png'),
             self.tr('Calculate lightnings route'),
             None
         )
@@ -150,31 +152,31 @@ class GisFIRELightnings:
         """
         # Setup parameters
         action = self._menu.addAction(self.tr('Setup'))
-        action.setIcon(QIcon(':/plugins/gis_fire_lightnings/setup.png'))
+        action.setIcon(QIcon(':/gisfire_lightnings/setup.png'))
         action.setIconVisibleInMenu(True)
         action.triggered.connect(self.__on_setup)
         self._menu_actions['setup'] = action
         """"# Meteo.cat Download lightnings
         action = self._menu.addAction(self.tr('Download meteo.cat Lightnings'))
-        action.setIcon(QIcon(':/plugins/gisfire_lightnings/meteocat-lightnings.png'))
+        action.setIcon(QIcon(':/gisfire_lightnings/meteocat-lightnings.png'))
         action.setIconVisibleInMenu(True)
         action.triggered.connect(self.onDownloadMeteoCatLightnings)
         self._menu_actions['download-meteocat-lightnings'] = action
         # Clip lightnings
         action = self._menu.addAction(self.tr('Clip lightnings on layer and features'))
-        action.setIcon(QIcon(':/plugins/gisfire_lightnings/clip-lightnings.png'))
+        action.setIcon(QIcon(':/gisfire_lightnings/clip-lightnings.png'))
         action.setIconVisibleInMenu(True)
         action.triggered.connect(self.onClipLightnings)
         self._menu_actions['clip-lightnings'] = action
         # Filter lightnings
         action = self._menu.addAction(self.tr('Filter lightnings'))
-        action.setIcon(QIcon(':/plugins/gisfire_lightnings/filter-lightnings.png'))
+        action.setIcon(QIcon(':/gisfire_lightnings/filter-lightnings.png'))
         action.setIconVisibleInMenu(True)
         action.triggered.connect(self.onFilterLightnings)
         self._menu_actions['clip-lightnings'] = action
         # Process lightnings
         action = self._menu.addAction(self.tr('Calculate lightnings route'))
-        action.setIcon(QIcon(':/plugins/gisfire_lightnings/process-lightnings.png'))
+        action.setIcon(QIcon(':/gisfire_lightnings/process-lightnings.png'))
         action.setIconVisibleInMenu(True)
         action.triggered.connect(self.onProcessLightnings)
         self._menu_actions['process-lightnings'] = action"""
@@ -186,6 +188,7 @@ class GisFIRELightnings:
         pass
 
     # noinspection PyPep8Naming
+    # noinspection DuplicatedCode
     def initGui(self):
         """
         Initializes the QGIS GUI for the GisFIRE Lightning plugin.
@@ -207,6 +210,7 @@ class GisFIRELightnings:
                 self.iface.mainWindow().menuBar().addMenu(self._menu_gisfire)
         # Create Lightnings menu
         self._menu = QMenu(self.tr(u'Lightnings'), self._menu_gisfire)
+        self._menu.setIcon(QIcon(':/gisfire_lightnings/lightnings.png'))
         self._menu_gisfire.addMenu(self._menu)
         # Set up the toolbar for lightnings plugin
         self._toolbar = self.iface.addToolBar(u'GisFIRE Lightnings')
@@ -219,6 +223,7 @@ class GisFIRELightnings:
         # Create relations with existing menus and buttons
         self.__add_relations()
 
+    # noinspection DuplicatedCode
     def unload(self):
         """
         Removes the plugin menu item and icon from QGIS GUI.
