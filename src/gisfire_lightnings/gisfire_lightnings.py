@@ -151,7 +151,7 @@ class GisFIRELightnings:
         Creates the menu entries that allow GisFIRE procedures.
         """
         # Setup parameters
-        action = self._menu.addAction(self.tr('Setup'))
+        action: QAction = self._menu.addAction(self.tr('Setup'))
         action.setIcon(QIcon(':/gisfire_lightnings/setup.png'))
         action.setIconVisibleInMenu(True)
         action.triggered.connect(self.__on_setup)
