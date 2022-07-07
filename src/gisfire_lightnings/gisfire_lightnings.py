@@ -1,22 +1,38 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
 import os.path
+import datetime
 
 from qgis.PyQt.QtCore import QSettings
 from qgis.PyQt.QtCore import QTranslator
 from qgis.PyQt.QtCore import QCoreApplication
+from qgis.PyQt.QtCore import QThread
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 from qgis.PyQt.QtWidgets import QDialog
-from PyQt5.QtWidgets import QMenu
-
+from qgis.PyQt.QtWidgets import QMenu
+from qgis.PyQt.QtWidgets import QMessageBox
 
 import qgis.utils
 from qgis.core import QgsSettings
+from qgis.core import Qgis
+from qgis.core import QgsProject
+from qgis.core import QgsVectorLayer
+from qgis.gui import QgisInterface
 
+from gisfire_meteocat_lib.classes.lightning import Lightning
+
+from typing import List
+
+from .resources import *  # noqa
+from .data_providers.gisfire.meteocat import DownloadLightningsUsingMeteocat
 from .ui.dialogs.settings import DlgSettings
-
-from .resources import *
+from .ui.dialogs.download_lightnings import DlgDownloadLightnings
+from .helpers.layers import add_layer_in_position
+from .helpers.meteocat import create_lightnings_layer
+from .helpers.meteocat import add_lightning_point
+from .helpers.meteocat import add_lightning_polygon
 
 
 class GisFIRELightnings:
@@ -25,7 +41,9 @@ class GisFIRELightnings:
 
     TODO: Add attributes information
     """
-    def __init__(self, iface):
+    iface: QgisInterface
+
+    def __init__(self, iface: QgisInterface):
         """
         Constructor.
 
@@ -44,7 +62,7 @@ class GisFIRELightnings:
         locale_path = os.path.join(
             self.plugin_dir,
             'i18n',
-            '{}.qm'.format(locale))
+            'gisfire_lightnings_{}.qm'.format(locale))
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
@@ -62,7 +80,7 @@ class GisFIRELightnings:
         self._layers = {}
 
     # noinspection PyMethodMayBeStatic
-    def tr(self, message):
+    def tr(self, message: str) -> str:
         """
         Get the translation for a string using Qt translation API.
 
@@ -84,7 +102,7 @@ class GisFIRELightnings:
             self.tr('Setup GisFIRE Lightnings'),
             None
         )
-        action.triggered.connect(self.__on_setup)
+        action.triggered.connect(self.__on_setup)  # noqa known issue https://youtrack.jetbrains.com/issue/PY-22908
         action.setEnabled(True)
         action.setCheckable(False)
         action.setStatusTip(self.tr('Setup GisFIRE Lightnings'))
@@ -93,19 +111,20 @@ class GisFIRELightnings:
         self._toolbar_actions['setup'] = action
         # Separator
         self._toolbar.addSeparator()
-        # Meteo.cat Download lightnings
+        # Download lightnings
         action = QAction(
-            QIcon(':/gisfire_lightnings/meteocat-lightnings.png'),
-            self.tr('Download meteo.cat Lightnings'),
+            QIcon(':/gisfire_lightnings/download-lightnings.png'),
+            self.tr('Download Lightnings'),
             None
         )
-        """action.triggered.connect(self.onDownloadMeteoCatLightnings)
+        action.triggered.connect(self.__on_download_lightnings)  # noqa known issue https://youtrack.jetbrains.com/issue/PY-22908
         action.setEnabled(True)
         action.setCheckable(False)
-        action.setStatusTip(self.tr('Download meteo.cat Lightnings'))
-        action.setWhatsThis(self.tr('Download meteo.cat Lightnings'))
+        action.setStatusTip(self.tr('Download Lightnings'))
+        action.setWhatsThis(self.tr('Download Lightnings'))
         self._toolbar.addAction(action)
-        self._toolbar_actions['download-meteocat-lightnings'] = action
+        self._toolbar_actions['download-lightnings'] = action
+        """
         # Clip lightnings
         action = QAction(
             QIcon(':/gisfire_lightnings/clip-lightnings.png'),
@@ -154,15 +173,15 @@ class GisFIRELightnings:
         action: QAction = self._menu.addAction(self.tr('Setup'))
         action.setIcon(QIcon(':/gisfire_lightnings/setup.png'))
         action.setIconVisibleInMenu(True)
-        action.triggered.connect(self.__on_setup)
+        action.triggered.connect(self.__on_setup)  # noqa known issue https://youtrack.jetbrains.com/issue/PY-22908
         self._menu_actions['setup'] = action
-        """"# Meteo.cat Download lightnings
-        action = self._menu.addAction(self.tr('Download meteo.cat Lightnings'))
-        action.setIcon(QIcon(':/gisfire_lightnings/meteocat-lightnings.png'))
+        # Download lightnings
+        action = self._menu.addAction(self.tr('Download Lightnings'))
+        action.setIcon(QIcon(':/gisfire_lightnings/download-lightnings.png'))
         action.setIconVisibleInMenu(True)
-        action.triggered.connect(self.onDownloadMeteoCatLightnings)
-        self._menu_actions['download-meteocat-lightnings'] = action
-        # Clip lightnings
+        action.triggered.connect(self.__on_download_lightnings)  # noqa known issue https://youtrack.jetbrains.com/issue/PY-22908
+        self._menu_actions['download-lightnings'] = action
+        """# Clip lightnings
         action = self._menu.addAction(self.tr('Clip lightnings on layer and features'))
         action.setIcon(QIcon(':/gisfire_lightnings/clip-lightnings.png'))
         action.setIconVisibleInMenu(True)
@@ -256,6 +275,7 @@ class GisFIRELightnings:
                 self._menu_gisfire.deleteLater()
 
     def __on_setup(self):
+        # TODO: Improve setting enabling and disabling data providers
         self._dlg = DlgSettings(self.iface.mainWindow())
         qgs_settings = QgsSettings()
         # Get values and initialize dialog
@@ -270,8 +290,100 @@ class GisFIRELightnings:
             qgs_settings.setValue("gisfire_lightnings/gisfire_api_url", self._dlg.gisfire_api_url)
             qgs_settings.setValue("gisfire_lightnings/gisfire_api_username", self._dlg.gisfire_api_username)
             qgs_settings.setValue("gisfire_lightnings/gisfire_api_token", self._dlg.gisfire_api_token)
-            print(self._dlg.meteocat_api_key)
-            print(self._dlg.gisfire_api_url)
-            print(self._dlg.gisfire_api_username)
-            print(self._dlg.gisfire_api_token)
+
+    def __on_download_lightnings(self):
+        # Get values and initialize dialog
+        qgs_settings: QgsSettings = QgsSettings()
+        meteocat_api_key = qgs_settings.value("gisfire_lightnings/meteocat_api_key", "")
+        gisfire_api_url: str = qgs_settings.value("gisfire_lightnings/gisfire_api_url", "")
+        gisfire_api_username: str = qgs_settings.value("gisfire_lightnings/gisfire_api_username", "")
+        gisfire_api_token: str = qgs_settings.value("gisfire_lightnings/gisfire_api_token", "")
+        # Errors
+        if meteocat_api_key == "" or len(meteocat_api_key) < 10:
+            self.iface.messageBar().pushMessage("", self.tr("MeteoCat API Key missing"), level=Qgis.Critical,
+                                                duration=5)
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setText(self.tr("Error"))
+            msg.setInformativeText(self.tr("MeteoCat API Key missing"))
+            msg.setWindowTitle(self.tr("Error"))
+            msg.exec_()
+            return
+        if gisfire_api_url == "" or len(gisfire_api_url) < 10:
+            self.iface.messageBar().pushMessage("", self.tr("GisFIRE API URL missing"), level=Qgis.Critical, duration=5)
+            msg: QMessageBox = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setText(self.tr("Error"))
+            msg.setInformativeText(self.tr("GisFIRE API URL missing"))
+            msg.setWindowTitle(self.tr("Error"))
+            msg.exec_()
+            return
+        if gisfire_api_username == "" or len(gisfire_api_username) < 1:
+            self.iface.messageBar().pushMessage("", self.tr("GisFIRE API Username missing"), level=Qgis.Critical,
+                                                duration=5)
+            msg: QMessageBox = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setText(self.tr("Error"))
+            msg.setInformativeText(self.tr("GisFIRE API Username missing"))
+            msg.setWindowTitle(self.tr("Error"))
+            msg.exec_()
+            return
+        if gisfire_api_token == "" or len(gisfire_api_token) < 10:
+            self.iface.messageBar().pushMessage("", self.tr("GisFIRE API token missing"), level=Qgis.Critical,
+                                                duration=5)
+            msg: QMessageBox = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setText(self.tr("Error"))
+            msg.setInformativeText(self.tr("GisFIRE API token missing"))
+            msg.setWindowTitle(self.tr("Error"))
+            msg.exec_()
+            return
+        # Check that the layers do not exist already and can cause conflicts
+        layer_names: List[str] = [layer.name() for layer in QgsProject.instance().mapLayers().values()]
+        if self.tr('lightnings') in layer_names or self.tr('lightnings-measurement-error') in layer_names:
+            self.iface.messageBar().pushMessage("",
+                                                self.tr(
+                                                    "Lightning layers exists, please remove them before downloading "
+                                                    "new lightnings"),
+                                                level=Qgis.Critical, duration=5)
+            return
+        # Show dialog
+        dlg: DlgDownloadLightnings = DlgDownloadLightnings(self.iface.mainWindow(), ['MeteoCat'])
+        result = dlg.exec_()
+        if result == QDialog.Accepted:
+            day: datetime.date = dlg.download_day
+            self._thread_download_meteocat = QThread()
+            self._worker_download_meteocat = DownloadLightningsUsingMeteocat(day, gisfire_api_url,
+                                                                             gisfire_api_username, gisfire_api_token,
+                                                                             meteocat_api_key, 25831)
+            self._worker_download_meteocat.moveToThread(self._thread_download_meteocat)
+            self._thread_download_meteocat.started.connect(self._worker_download_meteocat.run)  # noqa known issue https://youtrack.jetbrains.com/issue/PY-22908
+            self._worker_download_meteocat.finished.connect(self._thread_download_meteocat.quit)  # noqa known issue https://youtrack.jetbrains.com/issue/PY-22908
+            self._worker_download_meteocat.finished.connect(self._worker_download_meteocat.deleteLater)  # noqa known issue https://youtrack.jetbrains.com/issue/PY-22908
+            self._thread_download_meteocat.finished.connect(self._thread_download_meteocat.deleteLater)  # noqa known issue https://youtrack.jetbrains.com/issue/PY-22908
+            self._worker_download_meteocat.progress.connect(self.__report_progress_download_lightnings_meteocat)  # noqa known issue https://youtrack.jetbrains.com/issue/PY-22908
+            self._worker_download_meteocat.data.connect(self.__received_data_download_lightnings_meteocat)  # noqa known issue https://youtrack.jetbrains.com/issue/PY-22908
+            self._worker_download_meteocat.finished.connect(self.__report_end_download_lightnings_meteocat)  # noqa known issue https://youtrack.jetbrains.com/issue/PY-22908
+            self.iface.messageBar().pushMessage("",
+                                                self.tr("Downloading Meteo.cat Lightning data through GisFIRE API."),
+                                                level=Qgis.Info, duration=1)
+            self._thread_download_meteocat.start()
+
+    def __report_progress_download_lightnings_meteocat(self, n):
+        pass
+
+    def __report_end_download_lightnings_meteocat(self):
+        self.iface.messageBar().pushMessage("", self.tr("Finished."), level=Qgis.Info, duration=1)
+
+    def __received_data_download_lightnings_meteocat(self, lightnings: List[Lightning]):
+        self.iface.messageBar().pushMessage("", self.tr("Received {0:d} lightnings.".format(len(lightnings))),
+                                            level=Qgis.Info, duration=1)
+        self.lightnings_layer = create_lightnings_layer('Point', 'lightnings', 25831)
+        self.lightning_errors_layer = create_lightnings_layer('Polygon', 'lightning-errors', 25831)
+        add_layer_in_position(self.lightnings_layer, 1)
+        add_layer_in_position(self.lightning_errors_layer, 2)
+        for lightning in lightnings:
+            add_lightning_point(self.lightnings_layer, lightning)
+            add_lightning_polygon(self.lightning_errors_layer, lightning)
+
 

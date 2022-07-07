@@ -2,7 +2,7 @@
     <qresource prefix="/gisfire_lightnings" >
       <file alias="lightnings.png">/icons/gisfire-lightning-64px.png</file>
       <file alias="setup.png">/icons/gisfire-lightning-setup-64px.png</file>
-      <file alias="meteocat-lightnings.png">/icons/meteocat-lightning-download-64px.png</file>
+      <file alias="download-lightnings.png">/icons/download-lightnings-64px.png</file>
       <file alias="clip-lightnings.png">/icons/clip-lightning-64px.png</file>
       <file alias="filter-lightnings.png">/icons/filter-lightning-64px.png</file>
       <file alias="process-lightnings.png">/icons/process-lightnings-64px.png</file>

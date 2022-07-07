@@ -37,15 +37,16 @@ pyrcc5 resources.qrc -o resources.py
 
 First generate the `.ts` file from the `.py` and `.ui` files.
 ```console
-pylupdate5 ../GisFIRE-Lightnings/src/gisfire_lightnings/gisfire_lightnings.py -ts ../GisFIRE-Lightnings/src/gisfire_lightnings/i18n/gisfire_spread_simulation_ca.ts
-pylupdate5 ../GisFIRE-Lightnings/src/gisfire_lightnings/ui/dialogs/settings.ui -ts ../GisFIRE-Lightnings/src/gisfire_lightnings/i18n/gisfire_spread_simulation_ca.ts
+pylupdate5 ../GisFIRE-Lightnings/src/gisfire_lightnings/gisfire_lightnings.py -ts ../GisFIRE-Lightnings/src/gisfire_lightnings/i18n/gisfire_lightnings_ca.ts
+pylupdate5 ../GisFIRE-Lightnings/src/gisfire_lightnings/ui/dialogs/settings.ui -ts ../GisFIRE-Lightnings/src/gisfire_lightnings/i18n/gisfire_lightnings_ca.ts
+pylupdate5 ../GisFIRE-Lightnings/src/gisfire_lightnings/ui/dialogs/download_lightnings.ui -ts ../GisFIRE-Lightnings/src/gisfire_lightnings/i18n/gisfire_lightnings_ca.ts
 ```
 
 Then use QLinguist to translate to different languages
 
 Finally, compile the `.ts` translation files to binary `.qm` files.
 ```console
-lrelease ../GisFIRE-Lightnings/src/gisfire_lightnings/i18n/gisfire_spread_simulation_ca.ts
+lrelease ../GisFIRE-Lightnings/src/gisfire_lightnings/i18n/gisfire_lightnings_ca.ts
 ```
 ### Running the tests
 
