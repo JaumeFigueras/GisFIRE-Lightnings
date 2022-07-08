@@ -29,6 +29,8 @@ from .resources import *  # noqa
 from .data_providers.gisfire.meteocat import DownloadLightningsUsingMeteocat
 from .ui.dialogs.settings import DlgSettings
 from .ui.dialogs.download_lightnings import DlgDownloadLightnings
+from .ui.dialogs.urban_areas import DlgUrbanAreas
+from .ui.renderers.lightnings import set_lightnings_renderer
 from .helpers.layers import add_layer_in_position
 from .helpers.meteocat import create_lightnings_layer
 from .helpers.meteocat import add_lightning_point
@@ -124,6 +126,19 @@ class GisFIRELightnings:
         action.setWhatsThis(self.tr('Download Lightnings'))
         self._toolbar.addAction(action)
         self._toolbar_actions['download-lightnings'] = action
+        # Filter urban lightnings
+        action: QAction = QAction(
+            QIcon(':/gisfire_lightnings/urban-lightnings.png'),
+            self.tr('Filter Urban Lightnings'),
+            None
+        )
+        action.triggered.connect(self.__on_filter_urban_lightnings)  # noqa known issue https://youtrack.jetbrains.com/issue/PY-22908
+        action.setEnabled(True)
+        action.setCheckable(False)
+        action.setStatusTip(self.tr('Filter Urban Lightnings'))
+        action.setWhatsThis(self.tr('Filter Urban Lightnings'))
+        self._toolbar.addAction(action)
+        self._toolbar_actions['urban-lightnings'] = action
         """
         # Clip lightnings
         action = QAction(
@@ -180,6 +195,12 @@ class GisFIRELightnings:
         action.setIcon(QIcon(':/gisfire_lightnings/download-lightnings.png'))
         action.setIconVisibleInMenu(True)
         action.triggered.connect(self.__on_download_lightnings)  # noqa known issue https://youtrack.jetbrains.com/issue/PY-22908
+        self._menu_actions['download-lightnings'] = action
+        # Filter Urban lightnings
+        action = self._menu.addAction(self.tr('Filter Urban Lightnings'))
+        action.setIcon(QIcon(':/gisfire_lightnings/urban-lightnings.png'))
+        action.setIconVisibleInMenu(True)
+        action.triggered.connect(self.__on_filter_urban_lightnings)  # noqa known issue https://youtrack.jetbrains.com/issue/PY-22908
         self._menu_actions['download-lightnings'] = action
         """# Clip lightnings
         action = self._menu.addAction(self.tr('Clip lightnings on layer and features'))
@@ -385,5 +406,16 @@ class GisFIRELightnings:
         for lightning in lightnings:
             add_lightning_point(self.lightnings_layer, lightning)
             add_lightning_polygon(self.lightning_errors_layer, lightning)
+        set_lightnings_renderer(self.lightnings_layer, self.tr)
+        self.lightnings_layer.updateExtents()
+        extent = self.lightnings_layer.extent()
+        self.iface.mapCanvas().setExtent(extent)
+        self.iface.mapCanvas().refresh()
+
+    def __on_filter_urban_lightnings(self):
+        dlg: DlgUrbanAreas = DlgUrbanAreas(self.iface.mainWindow())
+        result = dlg.exec_()
+        if result == QDialog.Accepted:
+            pass
 
 

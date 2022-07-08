@@ -6,5 +6,6 @@
       <file alias="clip-lightnings.png">/icons/clip-lightning-64px.png</file>
       <file alias="filter-lightnings.png">/icons/filter-lightning-64px.png</file>
       <file alias="process-lightnings.png">/icons/process-lightnings-64px.png</file>
+      <file alias="urban-lightnings.png">/icons/urban-lightnings-64px.png</file>
     </qresource>
 </RCC>
