@@ -9,7 +9,7 @@ from qgis.core import QgsVectorLayer
 from qgis.core import QgsMapLayer
 from qgis.core import QgsField
 from qgis.core import QgsFeature
-from qgis.PyQt.QtWidgets import QSpinBox
+from qgis.PyQt.QtWidgets import QDoubleSpinBox
 from qgis.PyQt.QtWidgets import QCheckBox
 from qgis.PyQt.QtWidgets import QWidget
 
@@ -26,10 +26,10 @@ class DlgFilterLightnings(QDialog, FORM_CLASS):
     """
 
     cbo_layer: QgsVectorLayer
-    spn_double_positive_min_current_filter: QSpinBox
-    spn_double_positive_max_current_filter: QSpinBox
-    spn_double_negative_min_current_filter: QSpinBox
-    spn_double_negative_max_current_filter: QSpinBox
+    spn_double_positive_min_current_filter: QDoubleSpinBox
+    spn_double_positive_max_current_filter: QDoubleSpinBox
+    spn_double_negative_min_current_filter: QDoubleSpinBox
+    spn_double_negative_max_current_filter: QDoubleSpinBox
     chk_enable_positive_filter: QCheckBox
     chk_enable_positive_current_filter: QCheckBox
     chk_enable_positive_min_current_filter: QCheckBox
@@ -41,7 +41,9 @@ class DlgFilterLightnings(QDialog, FORM_CLASS):
     chk_enable_cloud_filter: QCheckBox
 
     def __init__(self, parent: QWidget = None) -> None:
-        """Constructor."""
+        """
+        Constructor.
+        """
         QDialog.__init__(self, parent)
         self.setupUi(self)
         # Create the exclusion list of non-conforming layers
@@ -68,10 +70,12 @@ class DlgFilterLightnings(QDialog, FORM_CLASS):
         self.spn_double_positive_max_current_filter.setMinimum(0)
         self.spn_double_positive_max_current_filter.setMaximum(9999)
         # Create the event handlers for the UI responses
-        self.chk_enable_positive_filter.stateChanged.connect(self.__on_enable_positive_filter_changed)
-        self.chk_enable_positive_current_filter.stateChanged.connect(self.__on_enable_positive_current_filter_changed)
-        self.chk_enable_positive_min_current_filter.stateChanged.connect(self.__on_enable_positive_min_current_filter_changed)
-        self.chk_enable_positive_max_current_filter.stateChanged.connect(self.__on_enable_positive_max_current_filter_changed)
+        self.chk_enable_positive_filter.stateChanged.connect(self.__on_enable_positive_filter_changed)  # noqa known issue https://youtrack.jetbrains.com/issue/PY-22908
+        self.chk_enable_positive_current_filter.stateChanged.connect(self.__on_enable_positive_current_filter_changed)  # noqa known issue https://youtrack.jetbrains.com/issue/PY-22908
+        self.chk_enable_positive_min_current_filter.stateChanged.connect(  # noqa known issue https://youtrack.jetbrains.com/issue/PY-22908
+            self.__on_enable_positive_min_current_filter_changed)
+        self.chk_enable_positive_max_current_filter.stateChanged.connect(  # noqa known issue https://youtrack.jetbrains.com/issue/PY-22908
+            self.__on_enable_positive_max_current_filter_changed)
         # Set default values and parameters to the widgets
         self.chk_enable_negative_filter.setChecked(True)
         self.chk_enable_negative_current_filter.setChecked(True)
@@ -86,10 +90,12 @@ class DlgFilterLightnings(QDialog, FORM_CLASS):
         self.spn_double_negative_max_current_filter.setMinimum(-9999)
         self.spn_double_negative_max_current_filter.setMaximum(0)
         # Create the event handlers for the UI responses
-        self.chk_enable_negative_filter.stateChanged.connect(self.__on_enable_negative_filter_changed)
-        self.chk_enable_negative_current_filter.stateChanged.connect(self.__on_enable_negative_current_filter_changed)
-        self.chk_enable_negative_min_current_filter.stateChanged.connect(self.__on_enable_negative_min_current_filter_changed)
-        self.chk_enable_negative_max_current_filter.stateChanged.connect(self.__on_enable_negative_max_current_filter_changed)
+        self.chk_enable_negative_filter.stateChanged.connect(self.__on_enable_negative_filter_changed)  # noqa known issue https://youtrack.jetbrains.com/issue/PY-22908
+        self.chk_enable_negative_current_filter.stateChanged.connect(self.__on_enable_negative_current_filter_changed)  # noqa known issue https://youtrack.jetbrains.com/issue/PY-22908
+        self.chk_enable_negative_min_current_filter.stateChanged.connect(  # noqa known issue https://youtrack.jetbrains.com/issue/PY-22908
+            self.__on_enable_negative_min_current_filter_changed)
+        self.chk_enable_negative_max_current_filter.stateChanged.connect(  # noqa known issue https://youtrack.jetbrains.com/issue/PY-22908
+            self.__on_enable_negative_max_current_filter_changed)
         # Set default values and parameters to the widgets
         self.chk_enable_cloud_filter.setChecked(True)
         # Compute the min and max values for a first layer
@@ -101,11 +107,15 @@ class DlgFilterLightnings(QDialog, FORM_CLASS):
         """
         self.chk_enable_positive_current_filter.setDisabled(not self.chk_enable_positive_filter.isChecked())
         if self.chk_enable_positive_filter.isChecked():
-            self.chk_enable_positive_min_current_filter.setDisabled(not self.chk_enable_positive_current_filter.isChecked())
-            self.chk_enable_positive_max_current_filter.setDisabled(not self.chk_enable_positive_current_filter.isChecked())
+            self.chk_enable_positive_min_current_filter.setDisabled(
+                not self.chk_enable_positive_current_filter.isChecked())
+            self.chk_enable_positive_max_current_filter.setDisabled(
+                not self.chk_enable_positive_current_filter.isChecked())
             if self.chk_enable_positive_current_filter.isChecked():
-                self.spn_double_positive_min_current_filter.setDisabled(not self.chk_enable_positive_min_current_filter.isChecked())
-                self.spn_double_positive_max_current_filter.setDisabled(not self.chk_enable_positive_max_current_filter.isChecked())
+                self.spn_double_positive_min_current_filter.setDisabled(
+                    not self.chk_enable_positive_min_current_filter.isChecked())
+                self.spn_double_positive_max_current_filter.setDisabled(
+                    not self.chk_enable_positive_max_current_filter.isChecked())
             else:
                 self.spn_double_positive_min_current_filter.setDisabled(True)
                 self.spn_double_positive_max_current_filter.setDisabled(True)
@@ -122,8 +132,10 @@ class DlgFilterLightnings(QDialog, FORM_CLASS):
         self.chk_enable_positive_min_current_filter.setDisabled(not self.chk_enable_positive_current_filter.isChecked())
         self.chk_enable_positive_max_current_filter.setDisabled(not self.chk_enable_positive_current_filter.isChecked())
         if self.chk_enable_positive_current_filter.isChecked():
-            self.spn_double_positive_min_current_filter.setDisabled(not self.chk_enable_positive_min_current_filter.isChecked())
-            self.spn_double_positive_max_current_filter.setDisabled(not self.chk_enable_positive_max_current_filter.isChecked())
+            self.spn_double_positive_min_current_filter.setDisabled(
+                not self.chk_enable_positive_min_current_filter.isChecked())
+            self.spn_double_positive_max_current_filter.setDisabled(
+                not self.chk_enable_positive_max_current_filter.isChecked())
         else:
             self.spn_double_positive_min_current_filter.setDisabled(True)
             self.spn_double_positive_max_current_filter.setDisabled(True)
@@ -132,52 +144,70 @@ class DlgFilterLightnings(QDialog, FORM_CLASS):
         """
         Event handler to respond to the user actions.
         """
-        self.spn_double_positive_min_current_filter.setDisabled(not self.chk_enable_positive_min_current_filter.isChecked())
+        self.spn_double_positive_min_current_filter.setDisabled(
+            not self.chk_enable_positive_min_current_filter.isChecked())
 
-    def __on_enable_positive_max_curren_filter_changed(self) -> None:
+    def __on_enable_positive_max_current_filter_changed(self) -> None:
         """
         Event handler to respond to the user actions.
         """
-        self.spn_double_positive_max_current_filter.setDisabled(not self.chk_enable_positive_max_current_filter.isChecked())
+        self.spn_double_positive_max_current_filter.setDisabled(
+            not self.chk_enable_positive_max_current_filter.isChecked())
 
-    def onEnableNegativeFilterChanged(self):
-        """Event handler to respond to the user actions."""
-        self._enable_negative_current_filter.setDisabled(not self._enable_negative_filter.isChecked())
-        if self._enable_negative_filter.isChecked():
-            self._enable_negative_min_current_filter.setDisabled(not self._enable_negative_current_filter.isChecked())
-            self._enable_negative_max_current_filter.setDisabled(not self._enable_negative_current_filter.isChecked())
-            if self._enable_negative_current_filter.isChecked():
-                self._double_negative_min_current_filter.setDisabled(not self._enable_negative_min_current_filter.isChecked())
-                self._double_negative_max_current_filter.setDisabled(not self._enable_negative_max_current_filter.isChecked())
+    def __on_enable_negative_filter_changed(self) -> None:
+        """
+        Event handler to respond to the user actions.
+        """
+        self.chk_enable_negative_current_filter.setDisabled(not self.chk_enable_negative_filter.isChecked())
+        if self.chk_enable_negative_filter.isChecked():
+            self.chk_enable_negative_min_current_filter.setDisabled(
+                not self.chk_enable_negative_current_filter.isChecked())
+            self.chk_enable_negative_max_current_filter.setDisabled(
+                not self.chk_enable_negative_current_filter.isChecked())
+            if self.chk_enable_negative_current_filter.isChecked():
+                self.spn_double_negative_min_current_filter.setDisabled(
+                    not self.chk_enable_negative_min_current_filter.isChecked())
+                self.spn__double_negative_max_current_filter.setDisabled(
+                    not self.chk_enable_negative_max_current_filter.isChecked())
             else:
-                self._double_negative_min_current_filter.setDisabled(True)
-                self._double_negative_max_current_filter.setDisabled(True)
+                self.spn_double_negative_min_current_filter.setDisabled(True)
+                self.spn_double_negative_max_current_filter.setDisabled(True)
         else:
-            self._enable_negative_min_current_filter.setDisabled(True)
-            self._enable_negative_max_current_filter.setDisabled(True)
-            self._double_negative_min_current_filter.setDisabled(True)
-            self._double_negative_max_current_filter.setDisabled(True)
+            self.chk_enable_negative_min_current_filter.setDisabled(True)
+            self.chk_enable_negative_max_current_filter.setDisabled(True)
+            self.spn_double_negative_min_current_filter.setDisabled(True)
+            self.spn_double_negative_max_current_filter.setDisabled(True)
 
-    def onEnableNegativeCurrentFilterChanged(self):
-        """Event handler to respond to the user actions."""
-        self._enable_negative_min_current_filter.setDisabled(not self._enable_negative_current_filter.isChecked())
-        self._enable_negative_max_current_filter.setDisabled(not self._enable_negative_current_filter.isChecked())
-        if self._enable_negative_current_filter.isChecked():
-            self._double_negative_min_current_filter.setDisabled(not self._enable_negative_min_current_filter.isChecked())
-            self._double_negative_max_current_filter.setDisabled(not self._enable_negative_max_current_filter.isChecked())
+    def __on_enable_negative_current_filter_changed(self) -> None:
+        """
+        Event handler to respond to the user actions.
+        """
+        self.chk_enable_negative_min_current_filter.setDisabled(not self.chk_enable_negative_current_filter.isChecked())
+        self.chk_enable_negative_max_current_filter.setDisabled(not self.chk_enable_negative_current_filter.isChecked())
+        if self.chk_enable_negative_current_filter.isChecked():
+            self.spn_double_negative_min_current_filter.setDisabled(
+                not self.chk_enable_negative_min_current_filter.isChecked())
+            self.spn_double_negative_max_current_filter.setDisabled(
+                not self.chk_enable_negative_max_current_filter.isChecked())
         else:
-            self._double_negative_min_current_filter.setDisabled(True)
-            self._double_negative_max_current_filter.setDisabled(True)
+            self.spn_double_negative_min_current_filter.setDisabled(True)
+            self.spn_double_negative_max_current_filter.setDisabled(True)
 
-    def onEnableNegativeMinCurrentFilterChanged(self):
-        """Event handler to respond to the user actions."""
-        self._double_negative_min_current_filter.setDisabled(not self._enable_negative_min_current_filter.isChecked())
+    def __on_enable_negative_min_current_filter_changed(self) -> None:
+        """
+        Event handler to respond to the user actions.
+        """
+        self.spn_double_negative_min_current_filter.setDisabled(
+            not self.chk_enable_negative_min_current_filter.isChecked())
 
-    def onEnableNegativeMaxCurrentFilterChanged(self):
-        """Event handler to respond to the user actions."""
-        self._double_negative_max_current_filter.setDisabled(not self._enable_negative_max_current_filter.isChecked())
+    def __on_enable_negative_max_current_filter_changed(self) -> None:
+        """
+        Event handler to respond to the user actions.
+        """
+        self.spn_double_negative_max_current_filter.setDisabled(
+            not self.chk_enable_negative_max_current_filter.isChecked())
 
-    def __on_layer_selected(self):
+    def __on_layer_selected(self) -> None:
         """
         Event handler to respond to the user actions.
         """
@@ -219,100 +249,100 @@ class DlgFilterLightnings(QDialog, FORM_CLASS):
             self.spn_double_negative_max_current_filter.setValue(max_negative)
 
     @property
-    def positive_filter(self):
-        return self._enable_positive_filter.isChecked()
+    def positive_filter(self) -> bool:
+        return self.chk_enable_positive_filter.isChecked()
 
     @positive_filter.setter
-    def positive_filter(self, value):
-        self._enable_positive_filter.setChecked(value)
+    def positive_filter(self, value: bool) -> None:
+        self.chk_enable_positive_filter.setChecked(value)
 
     @property
-    def positive_current_filter(self):
-        return self._enable_positive_current_filter.isChecked()
+    def positive_current_filter(self) -> bool:
+        return self.chk_enable_positive_current_filter.isChecked()
 
     @positive_current_filter.setter
-    def positive_current_filter(self, value):
-        self._enable_positive_current_filter.setChecked(value)
+    def positive_current_filter(self, value: bool) -> None:
+        self.chk_enable_positive_current_filter.setChecked(value)
 
     @property
-    def positive_min_current_filter(self):
-        return self._enable_positive_min_current_filter.isChecked()
+    def positive_min_current_filter(self) -> bool:
+        return self.chk_enable_positive_min_current_filter.isChecked()
 
     @positive_min_current_filter.setter
-    def positive_min_current_filter(self, value):
-        self._enable_positive_min_current_filter.setChecked(value)
+    def positive_min_current_filter(self, value: bool) -> None:
+        self.chk_enable_positive_min_current_filter.setChecked(value)
 
     @property
-    def positive_max_current_filter(self):
-        return self._enable_positive_max_current_filter.isChecked()
+    def positive_max_current_filter(self) -> bool:
+        return self.chk_enable_positive_max_current_filter.isChecked()
 
     @positive_max_current_filter.setter
-    def positive_max_current_filter(self, value):
-        self._enable_positive_max_current_filter.setChecked(value)
+    def positive_max_current_filter(self, value: bool) -> None:
+        self.chk_enable_positive_max_current_filter.setChecked(value)
 
     @property
-    def positive_min_current(self):
-        return self._double_positive_min_current_filter.value()
+    def positive_min_current(self) -> float:
+        return self.spn_double_positive_min_current_filter.value()
 
     @positive_min_current.setter
-    def positive_min_current(self, value):
-        self._double_positive_min_current_filter.setValue(value)
+    def positive_min_current(self, value: float) -> None:
+        self.spn_double_positive_min_current_filter.setValue(value)
 
     @property
-    def positive_max_current(self):
-        return self._double_positive_max_current_filter.value()
+    def positive_max_current(self) -> float:
+        return self.spn_double_positive_max_current_filter.value()
 
     @positive_max_current.setter
-    def positive_max_current(self, value):
-        self._double_positive_max_current_filter.setValue(value)
+    def positive_max_current(self, value: float) -> None:
+        self.spn_double_positive_max_current_filter.setValue(value)
 
     @property
-    def negative_filter(self):
-        return self._enable_negative_filter.isChecked()
+    def negative_filter(self) -> bool:
+        return self.chk_enable_negative_filter.isChecked()
 
     @negative_filter.setter
-    def negative_filter(self, value):
-        self._enable_negative_filter.setChecked(value)
+    def negative_filter(self, value: bool) -> None:
+        self.chk_enable_negative_filter.setChecked(value)
 
     @property
-    def negative_current_filter(self):
-        return self._enable_negative_current_filter.isChecked()
+    def negative_current_filter(self) -> bool:
+        return self.chk_enable_negative_current_filter.isChecked()
 
     @negative_current_filter.setter
-    def negative_current_filter(self, value):
-        self._enable_negative_current_filter.setChecked(value)
+    def negative_current_filter(self, value: bool) -> None:
+        self.chk_enable_negative_current_filter.setChecked(value)
 
     @property
-    def negative_min_current_filter(self):
-        return self._enable_negative_min_current_filter.isChecked()
+    def negative_min_current_filter(self) -> bool:
+        return self.chk_enable_negative_min_current_filter.isChecked()
 
     @negative_min_current_filter.setter
-    def negative_min_current_filter(self, value):
-        self._enable_negative_min_current_filter.setChecked(value)
+    def negative_min_current_filter(self, value: bool) -> None:
+        self.chk_enable_negative_min_current_filter.setChecked(value)
 
     @property
-    def negative_max_current_filter(self):
-        return self._enable_negative_max_current_filter.isChecked()
+    def negative_max_current_filter(self) -> bool:
+        return self.chk_enable_negative_max_current_filter.isChecked()
 
     @negative_max_current_filter.setter
-    def negative_max_current_filter(self, value):
-        self._enable_negative_max_current_filter.setChecked(value)
+    def negative_max_current_filter(self, value: bool) -> None:
+        self.chk_enable_negative_max_current_filter.setChecked(value)
 
     @property
-    def negative_min_current(self):
-        return self._double_negative_min_current_filter.value()
+    def negative_min_current(self) -> float:
+        return self.spn_double_negative_min_current_filter.value()
 
     @negative_min_current.setter
-    def negative_min_current(self, value):
-        self._double_negative_min_current_filter.setValue(value)
+    def negative_min_current(self, value: float) -> None:
+        self.spn_double_negative_min_current_filter.setValue(value)
 
     @property
-    def negative_max_current(self):
-        return self._double_negative_max_current_filter.value()
+    def negative_max_current(self) -> float:
+        return self.spn_double_negative_max_current_filter.value()
 
     @negative_max_current.setter
-    def negative_max_current(self, value):
-        self._double_negative_max_current_filter.setValue(value)
+    def negative_max_current(self, value: float) -> None:
+        self.spn_double_negative_max_current_filter.setValue(value)
 
     @property
     def cloud_filter(self) -> bool:

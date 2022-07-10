@@ -19,7 +19,12 @@ from qgis.core import QgsSettings
 from qgis.core import Qgis
 from qgis.core import QgsProject
 from qgis.core import QgsVectorLayer
+from qgis.core import QgsProcessingFeatureSourceDefinition
+from qgis.core import QgsProcessingFeedback
+from qgis.core import QgsApplication
+from processing.core.Processing import Processing
 from qgis.gui import QgisInterface
+import processing
 
 from gisfire_meteocat_lib.classes.lightning import Lightning
 
@@ -30,6 +35,8 @@ from .data_providers.gisfire.meteocat import DownloadLightningsUsingMeteocat
 from .ui.dialogs.settings import DlgSettings
 from .ui.dialogs.download_lightnings import DlgDownloadLightnings
 from .ui.dialogs.urban_areas import DlgUrbanAreas
+from .ui.dialogs.filters import DlgFilterLightnings
+from .ui.dialogs.clipping import DlgClipLightnings
 from .ui.renderers.lightnings import set_lightnings_renderer
 from .helpers.layers import add_layer_in_position
 from .helpers.meteocat import create_lightnings_layer
@@ -139,14 +146,13 @@ class GisFIRELightnings:
         action.setWhatsThis(self.tr('Filter Urban Lightnings'))
         self._toolbar.addAction(action)
         self._toolbar_actions['urban-lightnings'] = action
-        """
         # Clip lightnings
         action = QAction(
             QIcon(':/gisfire_lightnings/clip-lightnings.png'),
             self.tr('Clip lightnings on layer and features'),
             None
         )
-        action.triggered.connect(self.onClipLightnings)
+        action.triggered.connect(self.__on_clip_lightnings)  # noqa known issue https://youtrack.jetbrains.com/issue/PY-22908
         action.setEnabled(True)
         action.setCheckable(False)
         action.setStatusTip(self.tr('Clip lightnings on layer and features'))
@@ -159,7 +165,7 @@ class GisFIRELightnings:
             self.tr('Filter lightnings'),
             None
         )
-        action.triggered.connect(self.onFilterLightnings)
+        action.triggered.connect(self.__on_filter_lightnings)  # noqa known issue https://youtrack.jetbrains.com/issue/PY-22908
         action.setEnabled(True)
         action.setCheckable(False)
         action.setStatusTip(self.tr('Filter lightnings'))
@@ -172,13 +178,13 @@ class GisFIRELightnings:
             self.tr('Calculate lightnings route'),
             None
         )
-        action.triggered.connect(self.onProcessLightnings)
+        action.triggered.connect(self.__on_process_lightnings)  # noqa known issue https://youtrack.jetbrains.com/issue/PY-22908
         action.setEnabled(True)
         action.setCheckable(False)
         action.setStatusTip(self.tr('Calculate lightnings route'))
         action.setWhatsThis(self.tr('Calculate lightnings route'))
         self._toolbar.addAction(action)
-        self._toolbar_actions['process-lightnings'] = action"""
+        self._toolbar_actions['process-lightnings'] = action
 
     def __add_menu_actions(self):
         """
@@ -202,24 +208,24 @@ class GisFIRELightnings:
         action.setIconVisibleInMenu(True)
         action.triggered.connect(self.__on_filter_urban_lightnings)  # noqa known issue https://youtrack.jetbrains.com/issue/PY-22908
         self._menu_actions['download-lightnings'] = action
-        """# Clip lightnings
+        # Clip lightnings
         action = self._menu.addAction(self.tr('Clip lightnings on layer and features'))
         action.setIcon(QIcon(':/gisfire_lightnings/clip-lightnings.png'))
         action.setIconVisibleInMenu(True)
-        action.triggered.connect(self.onClipLightnings)
+        action.triggered.connect(self.__on_clip_lightnings)  # noqa known issue https://youtrack.jetbrains.com/issue/PY-22908
         self._menu_actions['clip-lightnings'] = action
         # Filter lightnings
         action = self._menu.addAction(self.tr('Filter lightnings'))
         action.setIcon(QIcon(':/gisfire_lightnings/filter-lightnings.png'))
         action.setIconVisibleInMenu(True)
-        action.triggered.connect(self.onFilterLightnings)
+        action.triggered.connect(self.__on_filter_lightnings)  # noqa known issue https://youtrack.jetbrains.com/issue/PY-22908
         self._menu_actions['clip-lightnings'] = action
         # Process lightnings
         action = self._menu.addAction(self.tr('Calculate lightnings route'))
         action.setIcon(QIcon(':/gisfire_lightnings/process-lightnings.png'))
         action.setIconVisibleInMenu(True)
-        action.triggered.connect(self.onProcessLightnings)
-        self._menu_actions['process-lightnings'] = action"""
+        action.triggered.connect(self.__on_process_lightnings)  # noqa known issue https://youtrack.jetbrains.com/issue/PY-22908
+        self._menu_actions['process-lightnings'] = action
 
     def __add_relations(self):
         """
@@ -312,7 +318,10 @@ class GisFIRELightnings:
             qgs_settings.setValue("gisfire_lightnings/gisfire_api_username", self._dlg.gisfire_api_username)
             qgs_settings.setValue("gisfire_lightnings/gisfire_api_token", self._dlg.gisfire_api_token)
 
-    def __on_download_lightnings(self):
+    def __on_download_lightnings(self) -> None:
+        """
+        TODO: Explain
+        """
         # Get values and initialize dialog
         qgs_settings: QgsSettings = QgsSettings()
         meteocat_api_key = qgs_settings.value("gisfire_lightnings/meteocat_api_key", "")
@@ -390,13 +399,19 @@ class GisFIRELightnings:
                                                 level=Qgis.Info, duration=1)
             self._thread_download_meteocat.start()
 
-    def __report_progress_download_lightnings_meteocat(self, n):
+    def __report_progress_download_lightnings_meteocat(self, n: int) -> None:
+        """
+        TODO: Explain
+        """
         pass
 
-    def __report_end_download_lightnings_meteocat(self):
+    def __report_end_download_lightnings_meteocat(self) -> None:
+        """
+        TODO: EXplain
+        """
         self.iface.messageBar().pushMessage("", self.tr("Finished."), level=Qgis.Info, duration=1)
 
-    def __received_data_download_lightnings_meteocat(self, lightnings: List[Lightning]):
+    def __received_data_download_lightnings_meteocat(self, lightnings: List[Lightning]) -> None:
         self.iface.messageBar().pushMessage("", self.tr("Received {0:d} lightnings.".format(len(lightnings))),
                                             level=Qgis.Info, duration=1)
         self.lightnings_layer = create_lightnings_layer('Point', 'lightnings', 25831)
@@ -412,10 +427,120 @@ class GisFIRELightnings:
         self.iface.mapCanvas().setExtent(extent)
         self.iface.mapCanvas().refresh()
 
-    def __on_filter_urban_lightnings(self):
+    def __on_filter_urban_lightnings(self) -> None:
+        """
+        TODO: Explain
+        """
         dlg: DlgUrbanAreas = DlgUrbanAreas(self.iface.mainWindow())
         result = dlg.exec_()
         if result == QDialog.Accepted:
             pass
 
+    def __on_clip_lightnings(self) -> None:
+        """
+        TODO: Explain
+        """
+        # Show dialog
+        dlg: DlgClipLightnings = DlgClipLightnings(self.iface.mainWindow())
+        result: int = dlg.exec_()
+        if result == QDialog.Accepted:
+            # Now we can clip
+            lightnings_layer: QgsVectorLayer = dlg.lightnings_layer
+            polygons_layer: QgsVectorLayer = dlg.polygons_layer
+            # Select te whole layer or the selected features only to clip
+            if lightnings_layer.selectedFeatureCount() == 0:
+                input_layer = lightnings_layer
+            else:
+                input_layer = QgsProcessingFeatureSourceDefinition(lightnings_layer.id(), True)
+            if polygons_layer.selectedFeatureCount() == 0:
+                overlay_layer = polygons_layer
+            else:
+                overlay_layer = QgsProcessingFeatureSourceDefinition(polygons_layer.id(), True)
+            # Create the processing workflow to clip
+            params = {'INPUT': input_layer, 'OVERLAY': overlay_layer, 'OUTPUT': 'memory:'}
+            feedback = QgsProcessingFeedback()
+            self.iface.messageBar().pushMessage("", self.tr("Clipping Lightnings."), level=Qgis.Info, duration=0)
+            QgsApplication.instance().processEvents()
+            result = processing.run('native:clip', params, feedback=feedback, is_child_algorithm=False)
+            tmp_layer = result['OUTPUT']
+            # Results appear as multipart so a single part process is executed
+            params = {'INPUT': tmp_layer, 'OUTPUT': 'memory:'}
+            feedback = QgsProcessingFeedback()
+            result = processing.run('native:multiparttosingleparts', params, feedback=feedback, is_child_algorithm=False)
+            new_layer = result['OUTPUT']
+            # Add the new layer to the project
+            new_layer.setName(lightnings_layer.name() + "-" + polygons_layer.name())
+            set_lightnings_renderer(new_layer, self.tr)
+            add_layer_in_position(new_layer, 1)
+            self.iface.messageBar().clearWidgets()
+            new_layer.triggerRepaint()
+            self.iface.mapCanvas().refresh()
+            QgsApplication.instance().processEvents()
+
+    def __on_filter_lightnings(self) -> None:
+        """
+        TODO: Explain
+        """
+        # Show dialog
+        dlg:  DlgFilterLightnings = DlgFilterLightnings(self.iface.mainWindow())
+        # Get the preferred values and initialize dialog
+        qgs_settings: QgsSettings = QgsSettings()
+        dlg.positive_filter = qgs_settings.value("gisfire_lightnings/positive_filter", "true") == "true"
+        dlg.positive_current_filter = qgs_settings.value("gisfire_lightnings/positive_current_filter", "true") == "true"
+        dlg.positive_min_current_filter = qgs_settings.value("gisfire_lightnings/positive_min_current_filter", "true") == "true"
+        dlg.positive_max_current_filter = qgs_settings.value("gisfire_lightnings/positive_max_current_filter", "true") == "true"
+        dlg.negative_filter = qgs_settings.value("gisfire_lightnings/negative_filter", "true") == "true"
+        dlg.negative_current_filter = qgs_settings.value("gisfire_lightnings/negative_current_filter", "true") == "true"
+        dlg.negative_min_current_filter = qgs_settings.value("gisfire_lightnings/negative_min_current_filter", "true") == "true"
+        dlg.negative_max_current_filter = qgs_settings.value("gisfire_lightnings/negative_max_current_filter", "true") == "true"
+        dlg.cloud_filter = qgs_settings.value("gisfire_lightnings/cloud_filter", "false") == "true"
+        # Run dialog
+        result = dlg.exec_()
+        if result == QDialog.Accepted:
+            # Get dialog data and store them to the preferences
+            qgs_settings.setValue("gisfire_lightnings/positive_filter", "true" if dlg.positive_filter else "false")
+            qgs_settings.setValue("gisfire_lightnings/positive_current_filter",
+                                  "true" if dlg.positive_current_filter else "false")
+            qgs_settings.setValue("gisfire_lightnings/positive_min_current_filter",
+                                  "true" if dlg.positive_min_current_filter else "false")
+            qgs_settings.setValue("gisfire_lightnings/positive_max_current_filter",
+                                  "true" if dlg.positive_max_current_filter else "false")
+            qgs_settings.setValue("gisfire_lightnings/negative_filter", "true" if dlg.negative_filter else "false")
+            qgs_settings.setValue("gisfire_lightnings/negative_current_filter",
+                                  "true" if dlg.negative_current_filter else "false")
+            qgs_settings.setValue("gisfire_lightnings/negative_min_current_filter",
+                                  "true" if dlg.negative_min_current_filter else "false")
+            qgs_settings.setValue("gisfire_lightnings/negative_max_current_filter",
+                                  "true" if dlg.negative_max_current_filter else "false")
+            qgs_settings.setValue("gisfire_lightnings/cloud_filter", "true" if dlg.cloud_filter else "false")
+            # Build the positive query depending on the selected filters
+            query_positive: str = "FALSE"
+            if dlg.positive_filter:
+                query_positive = "hit_ground = 1 AND peak_current > 0"
+                if dlg.positive_current_filter and dlg.positive_min_current_filter:
+                    query_positive += " AND peak_current >= " + str(dlg.positive_min_current)
+                if dlg.positive_current_filter and dlg.positive_max_current_filter:
+                    query_positive += " AND peak_current <= " + str(dlg.positive_max_current)
+            # Build the negative query depending on the selected filters
+            query_negative: str = "FALSE"
+            if dlg.negative_filter:
+                query_negative = "hit_ground = 1 AND peak_current < 0"
+                if dlg.negative_current_filter and dlg.negative_min_current_filter:
+                    query_negative += " AND peak_current >= " + str(dlg.negative_min_current)
+                if dlg.negative_current_filter and dlg.negative_max_current_filter:
+                    query_negative += " AND peak_current <= " + str(dlg.negative_max_current)
+            # Build the cloud to cloud query if it is selected
+            query_cloud: str = "FALSE"
+            if dlg.cloud_filter:
+                query_cloud = "hit_ground = 0"
+            # Build and apply the combined query
+            query: str = "({0:}) OR ({1:}) OR ({2:})".format(query_positive, query_negative, query_cloud)
+            layer = dlg.lightnings_layer
+            layer.setSubsetString(query)
+
+    def __on_process_lightnings(self) -> None:
+        """
+        TODO: Explain
+        """
+        pass
 

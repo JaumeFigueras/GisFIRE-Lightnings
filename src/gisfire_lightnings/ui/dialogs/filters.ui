@@ -42,7 +42,7 @@
            </widget>
           </item>
           <item row="0" column="1">
-           <widget class="QgsMapLayerComboBox" name="_layer"/>
+           <widget class="QgsMapLayerComboBox" name="cbo_layer"/>
           </item>
          </layout>
         </item>
@@ -60,7 +60,7 @@
           <item row="0" column="1">
            <layout class="QVBoxLayout" name="verticalLayout_5">
             <item>
-             <widget class="QCheckBox" name="_enable_positive_current_filter">
+             <widget class="QCheckBox" name="chk_enable_positive_current_filter">
               <property name="text">
                <string>Peak Current</string>
               </property>
@@ -71,7 +71,7 @@
           <item row="0" column="0">
            <layout class="QVBoxLayout" name="verticalLayout_6">
             <item>
-             <widget class="QCheckBox" name="_enable_positive_filter">
+             <widget class="QCheckBox" name="chk_enable_positive_filter">
               <property name="text">
                <string>Filter Active</string>
               </property>
@@ -85,28 +85,28 @@
           <item row="1" column="2">
            <layout class="QVBoxLayout" name="verticalLayout_4">
             <item>
-             <widget class="QCheckBox" name="_enable_positive_max_current_filter">
+             <widget class="QCheckBox" name="chk_enable_positive_max_current_filter">
               <property name="text">
                <string>Maximum</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QDoubleSpinBox" name="_double_positive_max_current_filter"/>
+             <widget class="QDoubleSpinBox" name="spn_double_positive_max_current_filter"/>
             </item>
            </layout>
           </item>
           <item row="1" column="1">
            <layout class="QVBoxLayout" name="verticalLayout_3">
             <item>
-             <widget class="QCheckBox" name="_enable_positive_min_current_filter">
+             <widget class="QCheckBox" name="chk_enable_positive_min_current_filter">
               <property name="text">
                <string>Minimum</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QDoubleSpinBox" name="_double_positive_min_current_filter"/>
+             <widget class="QDoubleSpinBox" name="spn_double_positive_min_current_filter"/>
             </item>
            </layout>
           </item>
@@ -126,7 +126,7 @@
           <item row="0" column="1">
            <layout class="QVBoxLayout" name="verticalLayout_8">
             <item>
-             <widget class="QCheckBox" name="_enable_negative_current_filter">
+             <widget class="QCheckBox" name="chk_enable_negative_current_filter">
               <property name="text">
                <string>Peak Current</string>
               </property>
@@ -137,7 +137,7 @@
           <item row="0" column="0">
            <layout class="QVBoxLayout" name="verticalLayout_9">
             <item>
-             <widget class="QCheckBox" name="_enable_negative_filter">
+             <widget class="QCheckBox" name="chk_enable_negative_filter">
               <property name="text">
                <string>Filter Active</string>
               </property>
@@ -151,28 +151,28 @@
           <item row="1" column="2">
            <layout class="QVBoxLayout" name="verticalLayout_11">
             <item>
-             <widget class="QCheckBox" name="_enable_negative_max_current_filter">
+             <widget class="QCheckBox" name="chk_enable_negative_max_current_filter">
               <property name="text">
                <string>Minimum</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QDoubleSpinBox" name="_double_negative_max_current_filter"/>
+             <widget class="QDoubleSpinBox" name="spn_double_negative_max_current_filter"/>
             </item>
            </layout>
           </item>
           <item row="1" column="1">
            <layout class="QVBoxLayout" name="verticalLayout_12">
             <item>
-             <widget class="QCheckBox" name="_enable_negative_min_current_filter">
+             <widget class="QCheckBox" name="chk_enable_negative_min_current_filter">
               <property name="text">
                <string>Maximum</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QDoubleSpinBox" name="_double_negative_min_current_filter"/>
+             <widget class="QDoubleSpinBox" name="spn_double_negative_min_current_filter"/>
             </item>
            </layout>
           </item>
@@ -192,7 +192,7 @@
           <item row="0" column="0">
            <layout class="QVBoxLayout" name="verticalLayout_14">
             <item>
-             <widget class="QCheckBox" name="_enable_cloud_filter">
+             <widget class="QCheckBox" name="chk_enable_cloud_filter">
               <property name="text">
                <string>Filter Active</string>
               </property>
