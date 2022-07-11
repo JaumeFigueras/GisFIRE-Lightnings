@@ -37,11 +37,25 @@ from .ui.dialogs.download_lightnings import DlgDownloadLightnings
 from .ui.dialogs.urban_areas import DlgUrbanAreas
 from .ui.dialogs.filters import DlgFilterLightnings
 from .ui.dialogs.clipping import DlgClipLightnings
+from .ui.dialogs.compute_tsp import DlgProcessLightnings
 from .ui.renderers.lightnings import set_lightnings_renderer
+from .ui.renderers.lightnings import set_cluster_renderer
 from .helpers.layers import add_layer_in_position
 from .helpers.meteocat import create_lightnings_layer
+from .helpers.meteocat import create_clustered_lightnings_layer
+from .helpers.meteocat import create_centroids_points_layer
+from .helpers.meteocat import create_path_layer
 from .helpers.meteocat import add_lightning_point
 from .helpers.meteocat import add_lightning_polygon
+from .helpers.meteocat import add_clustered_lightning_point
+from .helpers.meteocat import add_centroid_point
+from .helpers.meteocat import add_path_point
+from .helpers.meteocat import add_path_line
+from .helpers.algorithms.main import greedy_clustering
+from .helpers.algorithms.main import get_centroids
+from .helpers.algorithms.main import re_arrange_clusters
+from .helpers.algorithms.main import compute_distance_matrix
+from .helpers.algorithms.main import non_crossing_paths
 
 
 class GisFIRELightnings:
@@ -540,7 +554,119 @@ class GisFIRELightnings:
 
     def __on_process_lightnings(self) -> None:
         """
-        TODO: Explain
+        TODO: Explain better
+        Display the Process dialog, get the parameters needed and compute the TSP problem ith the selected layers
         """
-        pass
+        # Show dialog
+        dlg: DlgProcessLightnings = DlgProcessLightnings(self.iface.mainWindow())
+        # Get settings values and initialize dialog
+        qgs_settings: QgsSettings = QgsSettings()
+        dlg.helicopter_maximum_distance = int(qgs_settings.value("gisfire_lightnings/helicopter_maximum_distance",
+                                                                 "300"))
+        dlg.enable_lightning_grouping = qgs_settings.value("gisfire_lightnings/enable_lightning_grouping",
+                                                           "true") == "true"
+        dlg.grouping_eps = int(qgs_settings.value("gisfire_lightnings/grouping_eps", "2000"))
+        # Run dialog
+        result: int = dlg.exec_()
+        if result == QDialog.Accepted:
+            # Get dialog data
+            lightnings_layer: QgsVectorLayer = dlg.lightnings_layer
+            helicopter_layer: QgsVectorLayer = dlg.helicopter_layer
+            # Just one base must be selected
+            if helicopter_layer.selectedFeatureCount() != 1:
+                self.iface.messageBar().pushMessage("", self.tr("One helicopter base must be selected"),
+                                                    level=Qgis.Critical, duration=5)
+                msg: QMessageBox = QMessageBox()
+                msg.setIcon(QMessageBox.Critical)
+                msg.setText(self.tr("Error"))
+                msg.setInformativeText(self.tr("One helicopter base must be selected"))
+                msg.setWindowTitle(self.tr("Error"))
+                msg.exec_()
+                return
+            # Retrieve settings data for future use
+            qgs_settings.setValue("gisfire_lightnings/helicopter_maximum_distance", str(dlg.helicopter_maximum_distance))
+            qgs_settings.setValue("gisfire_lightnings/enable_lightning_grouping",
+                                  "true" if dlg.enable_lightning_grouping else "false")
+            qgs_settings.setValue("gisfire_lightnings/grouping_eps", str(dlg.grouping_eps))
+            # Get the lightnings or selected lightnings data from the layer
+            if len(lightnings_layer.selectedFeatures()) > 0:
+                lightnings_iterator = lightnings_layer.selectedFeatures()
+            else:
+                lightnings_iterator = lightnings_layer.getFeatures()
+            # TODO: Add main gisfire id
+            lightnings: List[Lightning] = [Lightning(meteocat_id=feature['meteocat_id'],
+                                                     date=feature['date'],
+                                                     peak_current=feature['peak_current'],
+                                                     chi_squared=feature['chi_squared'],
+                                                     ellipse_major_axis=feature['ellipse_major_axis'],
+                                                     ellipse_minor_axis=feature['ellipse_minor_axis'],
+                                                     ellipse_angle=feature['ellipse_angle'],
+                                                     number_of_sensors=feature['number_of_sensors'],
+                                                     hit_ground=feature['hit_ground'],
+                                                     coordinates_longitude=feature.geometry().asPoint().x(),
+                                                     coordinates_latitude=feature.geometry().asPoint().y())
+                                           for feature in lightnings_iterator]
 
+            # If we want to create lightning clusters
+            if dlg.enable_lightning_grouping:
+                # Create the cluster layer and clusters
+                # TODO: Hardcoded EPSG improve
+                clustered_lightnings_layer: QgsVectorLayer = create_clustered_lightnings_layer('Point',self.tr('clustered-lightnings'), 25831)
+                clustered_lightnings, number_of_clusters = greedy_clustering(lightnings, eps=dlg.grouping_eps)
+                clusters = get_centroids(clustered_lightnings)
+                arranged_lightnings = clustered_lightnings
+                # Re-arrange clusters depending on centroids
+                for _ in range(3):
+                    arranged_lightnings, changes = re_arrange_clusters(clusters, arranged_lightnings)
+                    if changes == 0:
+                        break
+                    clusters = get_centroids(arranged_lightnings)
+                # Add clusters and centroids into its layers
+                for clustered_lightning in arranged_lightnings:
+                    add_clustered_lightning_point(clustered_lightnings_layer, clustered_lightning)
+                add_layer_in_position(clustered_lightnings_layer, 1)
+                set_cluster_renderer(clustered_lightnings_layer, 'circle', clusters)
+                centroids_layer = create_centroids_points_layer('Point', self.tr('cluster-centroids'), 25831)
+                for cluster in clusters:
+                    add_centroid_point(centroids_layer, cluster)
+                add_layer_in_position(centroids_layer, 1)
+                set_cluster_renderer(centroids_layer, 'triangle', clusters)
+            else:
+                clusters = [{'id': i, 'centroid':lightnings[i]['point']} for i in range(len(lightnings))]
+            # Get the selected helicopter base data from the layer
+            base = {'id': helicopter_layer.selectedFeatures()[0].attributes()[0],
+                    'point': (helicopter_layer.selectedFeatures()[0].geometry().asPoint().x(), helicopter_layer.selectedFeatures()[0].geometry().asPoint().y())
+                    }
+            # build the centroid list
+            centroid_points = [{'id': cluster['id'],
+                                'point': cluster['centroid']
+                                } for cluster in clusters]
+            centroid_points = [base] + centroid_points + [base]
+            # Get the point coordinates and calculate the distance matrix
+            points = [(point['point'][0], point['point'][1]) for point in centroid_points]
+            distance_matrix = compute_distance_matrix(points)
+            # Approximate a TSP searching for a planar path
+            path = non_crossing_paths(distance_matrix, list(range(len(points))))
+            # Create the results layer
+            points_layer = create_path_layer('Point', self.tr('visit-points'), 25831)
+            path_layer = create_path_layer('LineString', self.tr('visit-path'), 25831)
+            # Add data to layers and show them
+            line = list()
+            for i in range(len(points)):
+                pt = {'id': i, 'x': points[path[i]][0], 'y': points[path[i]][1]}
+                add_path_point(points_layer, pt)
+                line.append(pt)
+            add_path_line(path_layer, line)
+            add_layer_in_position(points_layer, 1)
+            add_layer_in_position(path_layer, 1)
+            length = 0
+            for feature in path_layer.getFeatures():
+                length = feature.geometry().length()
+            if (length / 1000) > dlg.helicopter_maximum_distance:
+                self.iface.messageBar().pushMessage("", self.tr("Calculated length of {} km is greater than selected maximum of {} km").format(length//1000, dlg.helicopter_maximum_distance), level=Qgis.Critical, duration=0)
+            else:
+                self.iface.messageBar().pushMessage("", self.tr("Process correctly finished. Route Length: {} km").format(length//1000), level=Qgis.Info, duration=0)
+            points_layer.triggerRepaint()
+            path_layer.triggerRepaint()
+            self.iface.mapCanvas().refresh()
+            QgsApplication.instance().processEvents()

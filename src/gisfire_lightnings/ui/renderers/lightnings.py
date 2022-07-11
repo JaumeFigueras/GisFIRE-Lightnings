@@ -54,7 +54,7 @@ def set_lightnings_renderer(layer: QgsVectorLayer, tr: Callable):
     rule_negative.setSymbol(symbol)
     root.appendChild(rule_negative)
     # Create positive Rule
-    rule_cloud_to_cloud: QgsRuleBasedRenderer.Rule= root.children()[0].clone()
+    rule_cloud_to_cloud: QgsRuleBasedRenderer.Rule = root.children()[0].clone()
     rule_cloud_to_cloud.setLabel(tr('Cloud to Cloud'))
     rule_cloud_to_cloud.setFilterExpression('"hit_ground" = 0')
     symbol: QgsMarkerSymbol = QgsMarkerSymbol.createSimple({'name': 'circle'})
