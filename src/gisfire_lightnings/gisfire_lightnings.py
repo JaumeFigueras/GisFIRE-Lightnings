@@ -26,7 +26,7 @@ from processing.core.Processing import Processing
 from qgis.gui import QgisInterface
 import processing
 
-from gisfire_meteocat_lib.classes.lightning import Lightning
+from meteocat.data_model import Lightning
 
 from typing import List
 

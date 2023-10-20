@@ -4,7 +4,7 @@ from scipy.spatial import distance
 from itertools import groupby
 import numpy as np
 import copy as cp
-from gisfire_meteocat_lib.classes.lightning import Lightning
+from meteocat.data_model import Lightning
 
 from typing import List
 from typing import Any

@@ -9,7 +9,7 @@ from requests.auth import HTTPBasicAuth
 from qgis.PyQt.QtCore import QObject
 from qgis.PyQt.QtCore import pyqtSignal
 
-from gisfire_meteocat_lib.classes.lightning import Lightning
+from meteocat.data_model import Lightning
 
 from typing import Union
 from typing import Dict

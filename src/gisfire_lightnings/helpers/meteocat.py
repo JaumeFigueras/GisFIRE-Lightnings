@@ -15,7 +15,7 @@ from qgis.core import QgsPointXY
 from qgis.core import QgsGeometry
 from qgis.PyQt.QtCore import QVariant
 
-from gisfire_meteocat_lib.classes.lightning import Lightning
+from meteocat.data_model import Lightning
 
 from typing import Union
 from typing import List
